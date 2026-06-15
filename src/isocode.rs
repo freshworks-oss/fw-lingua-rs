@@ -47,6 +47,10 @@ pub enum IsoCode639_1 {
     /// The ISO 639-1 code for [`Afrikaans`](crate::language::Language::Afrikaans)
     AF,
 
+    #[cfg(feature = "amharic")]
+    /// The ISO 639-1 code for [`Amharic`](crate::language::Language::Amharic)
+    AM,
+
     #[cfg(feature = "arabic")]
     /// The ISO 639-1 code for [`Arabic`](crate::language::Language::Arabic)
     AR,
@@ -371,6 +375,10 @@ pub enum IsoCode639_3 {
     #[cfg(feature = "afrikaans")]
     /// The ISO 639-3 code for [`Afrikaans`](crate::language::Language::Afrikaans)
     AFR,
+
+    #[cfg(feature = "amharic")]
+    /// The ISO 639-3 code for [`Amharic`](crate::language::Language::Amharic)
+    AMH,
 
     #[cfg(feature = "arabic")]
     /// The ISO 639-3 code for [`Arabic`](crate::language::Language::Arabic)

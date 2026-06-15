@@ -62,6 +62,7 @@ def test_all_languages_are_available():
         [
             Language.AFRIKAANS,
             Language.ALBANIAN,
+            Language.AMHARIC,
             Language.ARABIC,
             Language.ARMENIAN,
             Language.AZERBAIJANI,
@@ -144,6 +145,7 @@ def test_all_spoken_languages_are_available():
         [
             Language.AFRIKAANS,
             Language.ALBANIAN,
+            Language.AMHARIC,
             Language.ARABIC,
             Language.ARMENIAN,
             Language.AZERBAIJANI,

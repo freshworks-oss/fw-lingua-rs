@@ -1470,6 +1470,7 @@ dependencies = [
  "itertools 0.14.0",
  "lingua-afrikaans-language-model",
  "lingua-albanian-language-model",
+ "lingua-amharic-language-model",
  "lingua-arabic-language-model",
  "lingua-armenian-language-model",
  "lingua-azerbaijani-language-model",
@@ -1571,6 +1572,13 @@ dependencies = [
 
 [[package]]
 name = "lingua-albanian-language-model"
+version = "1.3.0"
+dependencies = [
+ "include_dir",
+]
+
+[[package]]
+name = "lingua-amharic-language-model"
 version = "1.3.0"
 dependencies = [
  "include_dir",

@@ -24,7 +24,7 @@ use strum_macros::{EnumIter, EnumString};
 use crate::alphabet::Alphabet;
 use crate::isocode::{IsoCode639_1, IsoCode639_3};
 
-/// This enum specifies the so far 75 supported languages which can be detected by *Lingua*.
+/// This enum specifies the so far 76 supported languages which can be detected by *Lingua*.
 #[derive(
     Clone,
     Copy,
@@ -59,6 +59,9 @@ pub enum Language {
 
     #[cfg(feature = "albanian")]
     Albanian,
+
+    #[cfg(feature = "amharic")]
+    Amharic,
 
     #[cfg(feature = "arabic")]
     Arabic,
@@ -370,6 +373,9 @@ impl Language {
             #[cfg(feature = "albanian")]
             Language::Albanian => IsoCode639_1::SQ,
 
+            #[cfg(feature = "amharic")]
+            Language::Amharic => IsoCode639_1::AM,
+
             #[cfg(feature = "arabic")]
             Language::Arabic => IsoCode639_1::AR,
 
@@ -599,6 +605,9 @@ impl Language {
 
             #[cfg(feature = "albanian")]
             Language::Albanian => IsoCode639_3::SQI,
+
+            #[cfg(feature = "amharic")]
+            Language::Amharic => IsoCode639_3::AMH,
 
             #[cfg(feature = "arabic")]
             Language::Arabic => IsoCode639_3::ARA,
@@ -1047,6 +1056,9 @@ impl Language {
 
             #[cfg(feature = "thai")]
             Language::Thai => hashset!(Alphabet::Thai),
+
+            #[cfg(feature = "amharic")]
+            Language::Amharic => hashset!(Alphabet::Ethiopic),
         }
     }
 
@@ -1143,6 +1155,7 @@ mod tests {
             hashset!(
                 Afrikaans,
                 Albanian,
+                Amharic,
                 Arabic,
                 Armenian,
                 Azerbaijani,
@@ -1227,6 +1240,7 @@ mod tests {
             hashset!(
                 Afrikaans,
                 Albanian,
+                Amharic,
                 Arabic,
                 Armenian,
                 Azerbaijani,
@@ -1392,8 +1406,8 @@ mod tests {
         assert_eq!(
             Language::all_with_single_unique_script(),
             hashset!(
-                Armenian, Bengali, Georgian, Greek, Gujarati, Punjabi, Korean, Hebrew, Tamil,
-                Telugu, Thai
+                Amharic, Armenian, Bengali, Georgian, Greek, Gujarati, Punjabi, Korean, Hebrew,
+                Tamil, Telugu, Thai
             )
         );
     }

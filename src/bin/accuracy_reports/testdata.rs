@@ -18,6 +18,7 @@ use include_dir::Dir;
 use lingua::Language;
 use lingua_afrikaans_language_model::AFRIKAANS_TESTDATA_DIRECTORY;
 use lingua_albanian_language_model::ALBANIAN_TESTDATA_DIRECTORY;
+use lingua_amharic_language_model::AMHARIC_TESTDATA_DIRECTORY;
 use lingua_arabic_language_model::ARABIC_TESTDATA_DIRECTORY;
 use lingua_armenian_language_model::ARMENIAN_TESTDATA_DIRECTORY;
 use lingua_azerbaijani_language_model::AZERBAIJANI_TESTDATA_DIRECTORY;
@@ -96,6 +97,7 @@ pub(crate) fn get_test_data_directory(language: &Language) -> Dir<'static> {
     match *language {
         Language::Afrikaans => AFRIKAANS_TESTDATA_DIRECTORY,
         Language::Albanian => ALBANIAN_TESTDATA_DIRECTORY,
+        Language::Amharic => AMHARIC_TESTDATA_DIRECTORY,
         Language::Arabic => ARABIC_TESTDATA_DIRECTORY,
         Language::Armenian => ARMENIAN_TESTDATA_DIRECTORY,
         Language::Azerbaijani => AZERBAIJANI_TESTDATA_DIRECTORY,

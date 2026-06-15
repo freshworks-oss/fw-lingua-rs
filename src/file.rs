@@ -21,6 +21,8 @@ use include_dir::Dir;
 use lingua_afrikaans_language_model::{AFRIKAANS_MODELS_DIRECTORY, AFRIKAANS_TESTDATA_DIRECTORY};
 #[cfg(feature = "albanian")]
 use lingua_albanian_language_model::{ALBANIAN_MODELS_DIRECTORY, ALBANIAN_TESTDATA_DIRECTORY};
+#[cfg(feature = "amharic")]
+use lingua_amharic_language_model::{AMHARIC_MODELS_DIRECTORY, AMHARIC_TESTDATA_DIRECTORY};
 #[cfg(feature = "arabic")]
 use lingua_arabic_language_model::{ARABIC_MODELS_DIRECTORY, ARABIC_TESTDATA_DIRECTORY};
 #[cfg(feature = "armenian")]
@@ -217,6 +219,9 @@ fn get_language_models_directory(language: Language) -> Dir<'static> {
 
         #[cfg(feature = "albanian")]
         Language::Albanian => ALBANIAN_MODELS_DIRECTORY,
+
+        #[cfg(feature = "amharic")]
+        Language::Amharic => AMHARIC_MODELS_DIRECTORY,
 
         #[cfg(feature = "arabic")]
         Language::Arabic => ARABIC_MODELS_DIRECTORY,
@@ -446,6 +451,9 @@ fn get_test_data_directory(language: Language) -> Dir<'static> {
 
         #[cfg(feature = "albanian")]
         Language::Albanian => ALBANIAN_TESTDATA_DIRECTORY,
+
+        #[cfg(feature = "amharic")]
+        Language::Amharic => AMHARIC_TESTDATA_DIRECTORY,
 
         #[cfg(feature = "arabic")]
         Language::Arabic => ARABIC_TESTDATA_DIRECTORY,

@@ -29,6 +29,7 @@ pub(crate) enum Alphabet {
     Bengali,
     Cyrillic,
     Devanagari,
+    Ethiopic,
     Georgian,
     Greek,
     Gujarati,
@@ -81,6 +82,7 @@ impl Alphabet {
             Alphabet::Bengali => &BENGALI,
             Alphabet::Cyrillic => &CYRILLIC,
             Alphabet::Devanagari => &DEVANAGARI,
+            Alphabet::Ethiopic => &ETHIOPIC,
             Alphabet::Georgian => &GEORGIAN,
             Alphabet::Greek => &GREEK,
             Alphabet::Gujarati => &GUJARATI,
@@ -141,6 +143,7 @@ static ARMENIAN: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("
 static BENGALI: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Bengali"));
 static CYRILLIC: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Cyrillic"));
 static DEVANAGARI: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Devanagari"));
+static ETHIOPIC: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Ethiopic"));
 static GEORGIAN: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Georgian"));
 static GREEK: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Greek"));
 static GUJARATI: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Gujarati"));
@@ -167,6 +170,7 @@ mod tests {
             hashmap!(
                 Alphabet::Armenian => Language::Armenian,
                 Alphabet::Bengali => Language::Bengali,
+                Alphabet::Ethiopic => Language::Amharic,
                 Alphabet::Georgian => Language::Georgian,
                 Alphabet::Greek => Language::Greek,
                 Alphabet::Gujarati => Language::Gujarati,
