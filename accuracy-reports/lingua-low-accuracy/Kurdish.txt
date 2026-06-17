@@ -1,0 +1,16 @@
+##### Kurdish #####
+
+>>> Accuracy on average: 62.90%
+
+>> Detection of 1000 single words (average length: 7 chars)
+Accuracy: 56.00%
+Erroneously classified as Arabic: 6.20%, Romanian: 5.10%, French: 4.90%, Turkish: 2.80%, Afrikaans: 2.50%, Urdu: 2.00%, Azerbaijani: 1.80%, Persian: 1.80%, Portuguese: 1.80%, Vietnamese: 1.70%, Basque: 1.20%, Hungarian: 1.10%, Malay: 0.90%, German: 0.80%, Esperanto: 0.60%, Tsonga: 0.60%, Danish: 0.50%, Latin: 0.50%, Shona: 0.50%, Albanian: 0.40%, Croatian: 0.40%, Dutch: 0.40%, Latvian: 0.40%, Sotho: 0.40%, Tagalog: 0.40%, Yoruba: 0.40%, Finnish: 0.30%, Icelandic: 0.30%, Lithuanian: 0.30%, Bokmal: 0.20%, English: 0.20%, Italian: 0.20%, Maori: 0.20%, Nynorsk: 0.20%, Polish: 0.20%, Tswana: 0.20%, Uzbek: 0.20%, Welsh: 0.20%, Xhosa: 0.20%, Bosnian: 0.10%, Catalan: 0.10%, Estonian: 0.10%, Ganda: 0.10%, Irish: 0.10%, Slovak: 0.10%, Somali: 0.10%, Swahili: 0.10%, Swedish: 0.10%, Zulu: 0.10%
+
+>> Detection of 1000 word pairs (average length: 16 chars)
+Accuracy: 61.00%
+Erroneously classified as French: 5.50%, Romanian: 5.20%, Afrikaans: 4.90%, Arabic: 4.00%, Turkish: 2.90%, Portuguese: 2.50%, Vietnamese: 2.20%, Azerbaijani: 2.00%, Urdu: 1.50%, Persian: 1.30%, Hungarian: 1.00%, German: 0.70%, Dutch: 0.40%, English: 0.40%, Esperanto: 0.40%, Yoruba: 0.40%, Albanian: 0.30%, Ganda: 0.30%, Shona: 0.30%, Sotho: 0.30%, Tsonga: 0.30%, Catalan: 0.20%, Croatian: 0.20%, Lithuanian: 0.20%, Polish: 0.20%, Tagalog: 0.20%, Basque: 0.10%, Bokmal: 0.10%, Danish: 0.10%, Estonian: 0.10%, Indonesian: 0.10%, Italian: 0.10%, Latin: 0.10%, Nynorsk: 0.10%, Swedish: 0.10%, Uzbek: 0.10%, Welsh: 0.10%, Zulu: 0.10%
+
+>> Detection of 1000 sentences (average length: 104 chars)
+Accuracy: 71.70%
+Erroneously classified as French: 20.50%, Romanian: 2.10%, Afrikaans: 0.80%, Portuguese: 0.60%, Vietnamese: 0.60%, Tagalog: 0.50%, Shona: 0.40%, Urdu: 0.40%, Arabic: 0.30%, Turkish: 0.30%, Dutch: 0.20%, Hungarian: 0.20%, Azerbaijani: 0.10%, Catalan: 0.10%, English: 0.10%, Esperanto: 0.10%, Finnish: 0.10%, Indonesian: 0.10%, Latin: 0.10%, Persian: 0.10%, Polish: 0.10%, Sotho: 0.10%, Tswana: 0.10%, Uzbek: 0.10%, Welsh: 0.10%, Xhosa: 0.10%
+

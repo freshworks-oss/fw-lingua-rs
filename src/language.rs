@@ -24,7 +24,7 @@ use strum_macros::{EnumIter, EnumString};
 use crate::alphabet::Alphabet;
 use crate::isocode::{IsoCode639_1, IsoCode639_3};
 
-/// This enum specifies the so far 76 supported languages which can be detected by *Lingua*.
+/// This enum specifies the so far 82 supported languages which can be detected by *Lingua*.
 #[derive(
     Clone,
     Copy,
@@ -68,6 +68,9 @@ pub enum Language {
 
     #[cfg(feature = "armenian")]
     Armenian,
+
+    #[cfg(feature = "assamese")]
+    Assamese,
 
     #[cfg(feature = "azerbaijani")]
     Azerbaijani,
@@ -162,11 +165,20 @@ pub enum Language {
     #[cfg(feature = "japanese")]
     Japanese,
 
+    #[cfg(feature = "kannada")]
+    Kannada,
+
     #[cfg(feature = "kazakh")]
     Kazakh,
 
     #[cfg(feature = "korean")]
     Korean,
+
+    #[cfg(feature = "kurdish")]
+    Kurdish,
+
+    #[cfg(feature = "lao")]
+    Lao,
 
     #[cfg(feature = "latin")]
     Latin,
@@ -182,6 +194,9 @@ pub enum Language {
 
     #[cfg(feature = "malay")]
     Malay,
+
+    #[cfg(feature = "malayalam")]
+    Malayalam,
 
     #[cfg(feature = "maori")]
     Maori,
@@ -266,6 +281,9 @@ pub enum Language {
 
     #[cfg(feature = "urdu")]
     Urdu,
+
+    #[cfg(feature = "uzbek")]
+    Uzbek,
 
     #[cfg(feature = "vietnamese")]
     Vietnamese,
@@ -382,6 +400,9 @@ impl Language {
             #[cfg(feature = "armenian")]
             Language::Armenian => IsoCode639_1::HY,
 
+            #[cfg(feature = "assamese")]
+            Language::Assamese => IsoCode639_1::AS,
+
             #[cfg(feature = "azerbaijani")]
             Language::Azerbaijani => IsoCode639_1::AZ,
 
@@ -475,11 +496,20 @@ impl Language {
             #[cfg(feature = "japanese")]
             Language::Japanese => IsoCode639_1::JA,
 
+            #[cfg(feature = "kannada")]
+            Language::Kannada => IsoCode639_1::KN,
+
             #[cfg(feature = "kazakh")]
             Language::Kazakh => IsoCode639_1::KK,
 
             #[cfg(feature = "korean")]
             Language::Korean => IsoCode639_1::KO,
+
+            #[cfg(feature = "kurdish")]
+            Language::Kurdish => IsoCode639_1::KU,
+
+            #[cfg(feature = "lao")]
+            Language::Lao => IsoCode639_1::LO,
 
             #[cfg(feature = "latin")]
             Language::Latin => IsoCode639_1::LA,
@@ -495,6 +525,9 @@ impl Language {
 
             #[cfg(feature = "malay")]
             Language::Malay => IsoCode639_1::MS,
+
+            #[cfg(feature = "malayalam")]
+            Language::Malayalam => IsoCode639_1::ML,
 
             #[cfg(feature = "maori")]
             Language::Maori => IsoCode639_1::MI,
@@ -580,6 +613,9 @@ impl Language {
             #[cfg(feature = "urdu")]
             Language::Urdu => IsoCode639_1::UR,
 
+            #[cfg(feature = "uzbek")]
+            Language::Uzbek => IsoCode639_1::UZ,
+
             #[cfg(feature = "vietnamese")]
             Language::Vietnamese => IsoCode639_1::VI,
 
@@ -614,6 +650,9 @@ impl Language {
 
             #[cfg(feature = "armenian")]
             Language::Armenian => IsoCode639_3::HYE,
+
+            #[cfg(feature = "assamese")]
+            Language::Assamese => IsoCode639_3::ASM,
 
             #[cfg(feature = "azerbaijani")]
             Language::Azerbaijani => IsoCode639_3::AZE,
@@ -708,11 +747,20 @@ impl Language {
             #[cfg(feature = "japanese")]
             Language::Japanese => IsoCode639_3::JPN,
 
+            #[cfg(feature = "kannada")]
+            Language::Kannada => IsoCode639_3::KAN,
+
             #[cfg(feature = "kazakh")]
             Language::Kazakh => IsoCode639_3::KAZ,
 
             #[cfg(feature = "korean")]
             Language::Korean => IsoCode639_3::KOR,
+
+            #[cfg(feature = "kurdish")]
+            Language::Kurdish => IsoCode639_3::KUR,
+
+            #[cfg(feature = "lao")]
+            Language::Lao => IsoCode639_3::LAO,
 
             #[cfg(feature = "latin")]
             Language::Latin => IsoCode639_3::LAT,
@@ -728,6 +776,9 @@ impl Language {
 
             #[cfg(feature = "malay")]
             Language::Malay => IsoCode639_3::MSA,
+
+            #[cfg(feature = "malayalam")]
+            Language::Malayalam => IsoCode639_3::MAL,
 
             #[cfg(feature = "maori")]
             Language::Maori => IsoCode639_3::MRI,
@@ -812,6 +863,9 @@ impl Language {
 
             #[cfg(feature = "urdu")]
             Language::Urdu => IsoCode639_3::URD,
+
+            #[cfg(feature = "uzbek")]
+            Language::Uzbek => IsoCode639_3::UZB,
 
             #[cfg(feature = "vietnamese")]
             Language::Vietnamese => IsoCode639_3::VIE,
@@ -901,6 +955,9 @@ impl Language {
             #[cfg(feature = "italian")]
             Language::Italian => hashset!(Alphabet::Latin),
 
+            #[cfg(feature = "kurdish")]
+            Language::Kurdish => hashset!(Alphabet::Latin, Alphabet::Arabic),
+
             #[cfg(feature = "latin")]
             Language::Latin => hashset!(Alphabet::Latin),
 
@@ -964,6 +1021,9 @@ impl Language {
             #[cfg(feature = "turkish")]
             Language::Turkish => hashset!(Alphabet::Latin),
 
+            #[cfg(feature = "uzbek")]
+            Language::Uzbek => hashset!(Alphabet::Latin),
+
             #[cfg(feature = "vietnamese")]
             Language::Vietnamese => hashset!(Alphabet::Latin),
 
@@ -1021,6 +1081,9 @@ impl Language {
             #[cfg(feature = "armenian")]
             Language::Armenian => hashset!(Alphabet::Armenian),
 
+            #[cfg(feature = "assamese")]
+            Language::Assamese => hashset!(Alphabet::Bengali),
+
             #[cfg(feature = "bengali")]
             Language::Bengali => hashset!(Alphabet::Bengali),
 
@@ -1059,6 +1122,15 @@ impl Language {
 
             #[cfg(feature = "amharic")]
             Language::Amharic => hashset!(Alphabet::Ethiopic),
+
+            #[cfg(feature = "kannada")]
+            Language::Kannada => hashset!(Alphabet::Kannada),
+
+            #[cfg(feature = "lao")]
+            Language::Lao => hashset!(Alphabet::Lao),
+
+            #[cfg(feature = "malayalam")]
+            Language::Malayalam => hashset!(Alphabet::Malayalam),
         }
     }
 
@@ -1158,6 +1230,7 @@ mod tests {
                 Amharic,
                 Arabic,
                 Armenian,
+                Assamese,
                 Azerbaijani,
                 Basque,
                 Belarusian,
@@ -1189,13 +1262,17 @@ mod tests {
                 Irish,
                 Italian,
                 Japanese,
+                Kannada,
                 Kazakh,
                 Korean,
+                Kurdish,
+                Lao,
                 Latin,
                 Latvian,
                 Lithuanian,
                 Macedonian,
                 Malay,
+                Malayalam,
                 Maori,
                 Marathi,
                 Mongolian,
@@ -1224,6 +1301,7 @@ mod tests {
                 Turkish,
                 Ukrainian,
                 Urdu,
+                Uzbek,
                 Vietnamese,
                 Welsh,
                 Xhosa,
@@ -1243,6 +1321,7 @@ mod tests {
                 Amharic,
                 Arabic,
                 Armenian,
+                Assamese,
                 Azerbaijani,
                 Basque,
                 Belarusian,
@@ -1274,12 +1353,16 @@ mod tests {
                 Irish,
                 Italian,
                 Japanese,
+                Kannada,
                 Kazakh,
                 Korean,
+                Kurdish,
+                Lao,
                 Latvian,
                 Lithuanian,
                 Macedonian,
                 Malay,
+                Malayalam,
                 Maori,
                 Marathi,
                 Mongolian,
@@ -1308,6 +1391,7 @@ mod tests {
                 Turkish,
                 Ukrainian,
                 Urdu,
+                Uzbek,
                 Vietnamese,
                 Welsh,
                 Xhosa,
@@ -1321,7 +1405,7 @@ mod tests {
     fn assert_certain_languages_support_arabic_script() {
         assert_eq!(
             Language::all_with_arabic_script(),
-            hashset!(Arabic, Persian, Urdu)
+            hashset!(Arabic, Kurdish, Persian, Urdu)
         );
     }
 
@@ -1371,6 +1455,7 @@ mod tests {
                 Indonesian,
                 Irish,
                 Italian,
+                Kurdish,
                 Latin,
                 Latvian,
                 Lithuanian,
@@ -1392,6 +1477,7 @@ mod tests {
                 Tsonga,
                 Tswana,
                 Turkish,
+                Uzbek,
                 Vietnamese,
                 Welsh,
                 Xhosa,
@@ -1406,8 +1492,8 @@ mod tests {
         assert_eq!(
             Language::all_with_single_unique_script(),
             hashset!(
-                Amharic, Armenian, Bengali, Georgian, Greek, Gujarati, Punjabi, Korean, Hebrew,
-                Tamil, Telugu, Thai
+                Amharic, Armenian, Georgian, Greek, Gujarati, Hebrew, Kannada, Korean, Lao,
+                Malayalam, Punjabi, Tamil, Telugu, Thai
             )
         );
     }

@@ -2,8 +2,11 @@
 
 ### Languages
 
-- The Amharic language is now supported. Thanks to its dedicated language
-  model, *Lingua* can now detect 76 languages in total.
+- Six new languages are now supported: Amharic, Assamese, Kannada, Kurdish,
+  Lao, Malayalam, and Uzbek. Thanks to their dedicated language models,
+  *Lingua* can now detect 82 languages in total. (Note: Amharic and Assamese
+  use Ethiopic and Bengali scripts respectively; Kannada/Lao/Malayalam each
+  introduce new scripts; Kurdish (Kurmanji) and Uzbek use Latin script.)
 
 ## Lingua 1.8.0 (released on 9 Mar 2026)
 

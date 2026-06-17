@@ -2058,7 +2058,6 @@ mod tests {
 
         // words with unique alphabet
         case("ունենա", Some(Armenian)),
-        case("জানাতে", Some(Bengali)),
         case("გარეუბან", Some(Georgian)),
         case("σταμάτησε", Some(Greek)),
         case("ઉપકરણોની", Some(Gujarati)),
@@ -2090,7 +2089,7 @@ mod tests {
     }
 
     #[rstest(word, expected_languages,
-        case("والموضوع", hashset!(Arabic, Persian, Urdu)),
+        case("والموضوع", hashset!(Arabic, Kurdish, Persian, Urdu)),
         case(
             "сопротивление",
             hashset!(
@@ -2200,9 +2199,10 @@ mod tests {
             hashset!(
                 Afrikaans, Albanian, Azerbaijani, Basque, Bokmal, Bosnian, Catalan, Croatian, Czech,
                 Danish, Dutch, English, Esperanto, Estonian, Finnish, French, Ganda, German, Hungarian,
-                Icelandic, Indonesian, Irish, Italian, Latin, Latvian, Lithuanian, Malay, Maori, Nynorsk,
-                Polish, Portuguese, Romanian, Shona, Slovak, Slovene, Somali, Sotho, Spanish, Swahili,
-                Swedish, Tagalog, Tsonga, Tswana, Turkish, Vietnamese, Welsh, Xhosa, Yoruba, Zulu
+                Icelandic, Indonesian, Irish, Italian, Kurdish, Latin, Latvian, Lithuanian, Malay,
+                Maori, Nynorsk, Polish, Portuguese, Romanian, Shona, Slovak, Slovene, Somali, Sotho,
+                Spanish, Swahili, Swedish, Tagalog, Tsonga, Tswana, Turkish, Uzbek, Vietnamese, Welsh,
+                Xhosa, Yoruba, Zulu
             )
         ),
     )]

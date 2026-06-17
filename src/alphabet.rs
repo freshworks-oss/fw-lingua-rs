@@ -38,8 +38,11 @@ pub(crate) enum Alphabet {
     Hangul,
     Hebrew,
     Hiragana,
+    Kannada,
     Katakana,
+    Lao,
     Latin,
+    Malayalam,
     Tamil,
     Telugu,
     Thai,
@@ -91,8 +94,11 @@ impl Alphabet {
             Alphabet::Hangul => &HANGUL,
             Alphabet::Hebrew => &HEBREW,
             Alphabet::Hiragana => &HIRAGANA,
+            Alphabet::Kannada => &KANNADA,
             Alphabet::Katakana => &KATAKANA,
+            Alphabet::Lao => &LAO,
             Alphabet::Latin => &LATIN,
+            Alphabet::Malayalam => &MALAYALAM,
             Alphabet::Tamil => &TAMIL,
             Alphabet::Telugu => &TELUGU,
             Alphabet::Thai => &THAI,
@@ -152,8 +158,11 @@ static HAN: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Han")
 static HANGUL: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Hangul"));
 static HEBREW: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Hebrew"));
 static HIRAGANA: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Hiragana"));
+static KANNADA: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Kannada"));
 static KATAKANA: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Katakana"));
+static LAO: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Lao"));
 static LATIN: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Latin"));
+static MALAYALAM: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Malayalam"));
 static TAMIL: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Tamil"));
 static TELUGU: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Telugu"));
 static THAI: LazyLock<CharSet> = LazyLock::new(|| CharSet::from_char_class("Thai"));
@@ -169,7 +178,6 @@ mod tests {
             Alphabet::all_supporting_single_language(),
             hashmap!(
                 Alphabet::Armenian => Language::Armenian,
-                Alphabet::Bengali => Language::Bengali,
                 Alphabet::Ethiopic => Language::Amharic,
                 Alphabet::Georgian => Language::Georgian,
                 Alphabet::Greek => Language::Greek,
@@ -178,7 +186,10 @@ mod tests {
                 Alphabet::Hangul => Language::Korean,
                 Alphabet::Hebrew => Language::Hebrew,
                 Alphabet::Hiragana => Language::Japanese,
+                Alphabet::Kannada => Language::Kannada,
                 Alphabet::Katakana => Language::Japanese,
+                Alphabet::Lao => Language::Lao,
+                Alphabet::Malayalam => Language::Malayalam,
                 Alphabet::Tamil => Language::Tamil,
                 Alphabet::Telugu => Language::Telugu,
                 Alphabet::Thai => Language::Thai
