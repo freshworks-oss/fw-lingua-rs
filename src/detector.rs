@@ -966,6 +966,7 @@ impl LanguageDetector {
     ) -> HashSet<Language> {
         let mut alphabet_counter = Counter::<Alphabet>::new();
         let half_word_count = (words.len() as f64) * 0.5;
+        let total_char_count: usize = words.iter().map(|w| w.chars().count()).sum();
 
         for word in words.iter() {
             for alphabet in Alphabet::iter() {
@@ -976,8 +977,13 @@ impl LanguageDetector {
             }
         }
 
-        if alphabet_counter.is_empty() {
-            return languages.clone();
+        // Why: text uses a script lingua doesn't model (e.g. Tibetan, Sinhala),
+        // possibly with incidental Latin noise from HTML/punctuation. Without this
+        // guard, stray ASCII chars hijack detection and produce a high-confidence
+        // false positive. Require matched chars to cover at least half the input.
+        let matched_char_count: usize = alphabet_counter.values().sum();
+        if total_char_count > 0 && (matched_char_count as f64) < (total_char_count as f64) * 0.5 {
+            return HashSet::new();
         }
 
         if alphabet_counter.len() > 1 {
