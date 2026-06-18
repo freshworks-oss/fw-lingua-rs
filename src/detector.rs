@@ -2124,9 +2124,9 @@ mod tests {
         case("wystąpią", hashset!(Lithuanian, Polish)),
         case("budowę", hashset!(Lithuanian, Polish)),
         case("nebūsime", hashset!(Latvian, Lithuanian, Maori, Yoruba)),
-        case("afişate", hashset!(Azerbaijani, Romanian, Turkish)),
+        case("afişate", hashset!(Azerbaijani, Kurdish, Romanian, Turkish)),
         case("kradzieżami", hashset!(Polish, Romanian)),
-        case("înviat", hashset!(French, Romanian)),
+        case("înviat", hashset!(French, Kurdish, Romanian)),
         case("venerdì", hashset!(Italian, Vietnamese, Yoruba)),
         case("años", hashset!(Basque, Spanish)),
         case("rozohňuje", hashset!(Czech, Slovak)),
@@ -2135,9 +2135,9 @@ mod tests {
         case("jeďte", hashset!(Czech, Romanian, Slovak)),
         case("minjaverðir", hashset!(Icelandic, Turkish)),
         case("þagnarskyldu", hashset!(Icelandic, Turkish)),
-        case("nebûtu", hashset!(French, Hungarian)),
+        case("nebûtu", hashset!(French, Hungarian, Kurdish)),
         case("hashemidëve", hashset!(Afrikaans, Albanian, Dutch, French)),
-        case("forêt", hashset!(Afrikaans, French, Portuguese, Vietnamese)),
+        case("forêt", hashset!(Afrikaans, French, Kurdish, Portuguese, Vietnamese)),
         case("succèdent", hashset!(French, Italian, Vietnamese, Yoruba)),
         case("où", hashset!(French, Italian, Vietnamese, Yoruba)),
         case("tõeliseks", hashset!(Estonian, Hungarian, Portuguese, Vietnamese)),
@@ -2159,7 +2159,7 @@ mod tests {
         case("navržen", hashset!(Bosnian, Czech, Croatian, Latvian, Lithuanian, Slovak, Slovene)),
         case(
             "façonnage",
-            hashset!(Albanian, Azerbaijani, Basque, Catalan, French, Portuguese, Turkish)
+            hashset!(Albanian, Azerbaijani, Basque, Catalan, French, Kurdish, Portuguese, Turkish)
         ),
         case(
             "höher",
