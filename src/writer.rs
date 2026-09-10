@@ -137,6 +137,137 @@ impl LanguageModelFilesWriter {
         Ok(())
     }
 
+    /// Merges an additional corpus into an `ngrams.fst` file that already exists,
+    /// instead of replacing it.
+    ///
+    /// Every ngram the existing model already knows keeps its current probability,
+    /// so the calibration of the shipped model is left intact. Only ngrams the
+    /// existing model has never seen are added, using the probability implied by
+    /// the new corpus. This widens coverage without shifting the model's decision
+    /// boundary against the other languages.
+    ///
+    /// `input_file_path`: The path to a txt file holding the additional corpus.
+    /// The assumed encoding of the txt file is UTF-8.
+    ///
+    /// `models_directory_path`: The path to an existing directory holding the
+    /// `ngrams.fst` file to merge into. The merged model is written back to it.
+    ///
+    /// `char_class`: A regex character class such as `\\p{L}` to restrict the set
+    /// of characters that the language model is built from.
+    ///
+    /// `min_new_ngram_count`: The number of times a previously unseen ngram must
+    /// occur in the new corpus before it is added. The tail of ngrams seen only
+    /// once or twice inflates the model size several-fold while barely moving
+    /// accuracy, so a small threshold such as 5 is usually a much better trade.
+    pub fn merge_and_write_language_model_files(
+        input_file_path: &Path,
+        models_directory_path: &Path,
+        language: Language,
+        char_class: &str,
+        min_new_ngram_count: u32,
+    ) -> io::Result<()> {
+        check_input_file_path(input_file_path);
+        check_output_directory_path(models_directory_path);
+
+        let unigram_model =
+            Self::create_language_model(input_file_path, &language, 1, char_class, &hashmap!())?;
+
+        let bigram_model = Self::create_language_model(
+            input_file_path,
+            &language,
+            2,
+            char_class,
+            &unigram_model.absolute_frequencies,
+        )?;
+
+        let trigram_model = Self::create_language_model(
+            input_file_path,
+            &language,
+            3,
+            char_class,
+            &bigram_model.absolute_frequencies,
+        )?;
+
+        let quadrigram_model = Self::create_language_model(
+            input_file_path,
+            &language,
+            4,
+            char_class,
+            &trigram_model.absolute_frequencies,
+        )?;
+
+        let fivegram_model = Self::create_language_model(
+            input_file_path,
+            &language,
+            5,
+            char_class,
+            &quadrigram_model.absolute_frequencies,
+        )?;
+
+        let model_file_path = models_directory_path.join(NGRAM_PROBABILITY_MODEL_FILE_NAME);
+        let existing_model = fst::Map::new(fs::read(&model_file_path)?)
+            .expect("Existing ngram model file could not be parsed");
+
+        let mut kvs = vec![];
+        let mut existing_ngrams = HashSet::new();
+        let mut stream = existing_model.stream();
+        while let Some((key, value)) = stream.next() {
+            existing_ngrams.insert(key.to_vec());
+            kvs.push((key.to_vec(), value));
+        }
+        let existing_count = existing_ngrams.len();
+
+        let total_unigram_frequency = unigram_model.absolute_frequencies.values().sum::<u32>();
+        let models = [
+            &unigram_model,
+            &bigram_model,
+            &trigram_model,
+            &quadrigram_model,
+            &fivegram_model,
+        ];
+        let mut added_count = 0;
+
+        for (idx, model) in models.iter().enumerate() {
+            let ngram_length = idx + 1;
+
+            for (ngram, frequency) in model.absolute_frequencies.iter() {
+                if *frequency < min_new_ngram_count {
+                    continue;
+                }
+                let key = ngram.value.as_bytes().to_vec();
+                if existing_ngrams.contains(&key) {
+                    continue;
+                }
+                let denominator = if ngram_length == 1 {
+                    total_unigram_frequency
+                } else {
+                    let chars = ngram.value.chars().collect_vec();
+                    let prefix = &chars[0..ngram_length - 1].iter().collect::<String>();
+                    match models[idx - 1]
+                        .absolute_frequencies
+                        .get(&Ngram::new(prefix))
+                    {
+                        Some(&value) => value,
+                        None => continue,
+                    }
+                };
+                let value = (*frequency as f64 / denominator as f64).ln().to_bits();
+                kvs.push((key, value));
+                added_count += 1;
+            }
+        }
+
+        println!(
+            "Merged {added_count} new ngrams into {existing_count} existing ngrams \
+             (min_new_ngram_count = {min_new_ngram_count})"
+        );
+
+        let fst_map = create_fst_map(kvs);
+        fs::write(&model_file_path, fst_map.as_fst().as_bytes())?;
+
+        Ok(())
+    }
+
     fn create_language_model(
         input_file_path: &Path,
         language: &Language,
@@ -601,6 +732,19 @@ mod tests {
         input_file
     }
 
+    fn read_fst_map_content(file_path: &Path) -> HashMap<String, u64> {
+        let bytes = fs::read(file_path).expect("Fst file could not be read");
+        let fst_map = fst::Map::new(bytes).expect("Fst file could not be parsed");
+        let mut content = hashmap!();
+        let mut stream = fst_map.stream();
+
+        while let Some((key, value)) = stream.next() {
+            content.insert(String::from_utf8(key.to_vec()).unwrap(), value);
+        }
+
+        content
+    }
+
     fn read_directory_content(directory: &Path) -> Vec<PathBuf> {
         let mut files = fs::read_dir(directory)
             .unwrap()
@@ -920,6 +1064,61 @@ mod tests {
                 &files[0],
                 NGRAM_PROBABILITY_MODEL_FILE_NAME,
                 high_accuracy_model,
+            );
+        }
+
+        #[rstest]
+        fn test_language_model_files_merger(text: &'static str) {
+            let input_file = create_temp_input_file(text);
+            let output_directory = tempdir().expect("Temporary directory could not be created");
+            LanguageModelFilesWriter::create_and_write_language_model_files(
+                input_file.path(),
+                output_directory.path(),
+                Language::English,
+                "\\p{L}",
+            )
+            .expect("Language model files could not be written");
+
+            let model_file_path = output_directory
+                .path()
+                .join(NGRAM_PROBABILITY_MODEL_FILE_NAME);
+            let model_before_merge = read_fst_map_content(&model_file_path);
+
+            // "qqqqq" occurs once, so every ngram it contains occurs at most
+            // five times and the fivegram itself stays below the threshold.
+            let additional_input_file = create_temp_input_file("qqqqq\n");
+            let result = LanguageModelFilesWriter::merge_and_write_language_model_files(
+                additional_input_file.path(),
+                output_directory.path(),
+                Language::English,
+                "\\p{L}",
+                2,
+            );
+            assert!(result.is_ok());
+
+            let model_after_merge = read_fst_map_content(&model_file_path);
+
+            // The probabilities the existing model already held must survive
+            // the merge untouched, otherwise its calibration shifts.
+            for (ngram, probability) in model_before_merge.iter() {
+                assert_eq!(
+                    model_after_merge.get(ngram),
+                    Some(probability),
+                    "probability of already known ngram '{ngram}' was modified"
+                );
+            }
+
+            // Ngrams reaching min_new_ngram_count are added ...
+            for ngram in ["q", "qq", "qqq", "qqqq"] {
+                assert!(
+                    model_after_merge.contains_key(ngram),
+                    "ngram '{ngram}' should have been added"
+                );
+            }
+            // ... while rarer ones are left out.
+            assert!(
+                !model_after_merge.contains_key("qqqqq"),
+                "ngram 'qqqqq' occurs only once and should not have been added"
             );
         }
     }
