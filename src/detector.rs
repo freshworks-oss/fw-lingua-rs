@@ -29,8 +29,8 @@ use strum::IntoEnumIterator;
 
 use crate::alphabet::Alphabet;
 use crate::constant::{
-    CHARS_TO_LANGUAGES_MAPPING, JAPANESE_CHARACTER_SET, TOKENS_WITH_OPTIONAL_WHITESPACE,
-    TOKENS_WITHOUT_WHITESPACE,
+    CHARS_TO_LANGUAGES_MAPPING, JAPANESE_CHARACTER_SET, JAPANESE_UNIQUE_KANJI,
+    TOKENS_WITH_OPTIONAL_WHITESPACE, TOKENS_WITHOUT_WHITESPACE,
 };
 use crate::language::Language;
 use crate::model::{
@@ -878,7 +878,19 @@ impl LanguageDetector {
 
                 if !is_match {
                     if cfg!(feature = "chinese") && Alphabet::Han.matches_char(character) {
-                        word_language_counter[&Language::from_str("Chinese").unwrap()] += 1;
+                        // Han unification means the script is shared by Chinese and
+                        // Japanese, so it cannot decide between them on its own.
+                        // A kanji that exists in neither simplified nor traditional
+                        // Chinese can, though. Every other Han character is credited
+                        // to Chinese, by far the more common source of Han-only text.
+                        if cfg!(feature = "japanese")
+                            && languages.contains(&Language::from_str("Japanese").unwrap())
+                            && JAPANESE_UNIQUE_KANJI.contains(&character)
+                        {
+                            word_language_counter[&Language::from_str("Japanese").unwrap()] += 1;
+                        } else {
+                            word_language_counter[&Language::from_str("Chinese").unwrap()] += 1;
+                        }
                     } else if cfg!(feature = "japanese")
                         && JAPANESE_CHARACTER_SET.is_char_match(character)
                     {
@@ -2077,6 +2089,28 @@ mod tests {
 
         // words with both chinese and japanese characters
         case("人参はβ−カロテン含有量が高く栄養豊富", Some(Japanese)),
+
+        // kanji-only words containing a character that exists in neither
+        // simplified nor traditional Chinese
+        case("携帯", Some(Japanese)),
+        case("帯", Some(Japanese)),
+        case("図書館", Some(Japanese)),
+        case("経済産業省", Some(Japanese)),
+        case("実験", Some(Japanese)),
+        case("選択", Some(Japanese)),
+        case("沢山", Some(Japanese)),
+        case("峠", Some(Japanese)),
+
+        // kanji-only words that are indistinguishable from Chinese remain Chinese
+        case("自動車", Some(Chinese)),
+        case("電話", Some(Chinese)),
+
+        // simplified and traditional Chinese are unaffected
+        case("这是一个测试", Some(Chinese)),
+        case("這是一個測試", Some(Chinese)),
+        case("中国", Some(Chinese)),
+        case("手机", Some(Chinese)),
+        case("汽车", Some(Chinese)),
     )]
     fn assert_language_detection_with_rules_works_correctly(
         detector_for_all_languages: LanguageDetector,
