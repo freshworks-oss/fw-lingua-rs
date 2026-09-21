@@ -25,6 +25,33 @@ use crate::language::Language;
 
 pub(crate) static JAPANESE_CHARACTER_SET: LazyLock<CharSet> =
     LazyLock::new(|| CharSet::from_char_classes(&["Hiragana", "Katakana", "Han"]));
+
+/// Kanji that exist in Japanese but in neither simplified nor traditional
+/// Chinese, and therefore identify a Han-only text as Japanese.
+///
+/// Because of Han unification, the `Han` script property is shared by Chinese
+/// and Japanese and so carries no language signal on its own. The individual
+/// code points often do: post-war Japan and mainland China simplified the same
+/// traditional forms differently, so a Japanese *shinjitai* frequently differs
+/// from both the simplified and the traditional Chinese form (帯 vs 带/帶). The
+/// set below collects those forms plus *kokuji*, characters coined in Japan
+/// that Chinese never adopted (峠, 込, 働, …).
+///
+/// Every entry is verified by `test_japanese_unique_kanji_are_absent_from_chinese_model`
+/// to be absent from the Chinese language model, so none of them can pull
+/// genuine Chinese text towards Japanese.
+pub(crate) static JAPANESE_UNIQUE_KANJI: LazyLock<HashSet<char>> = LazyLock::new(|| {
+    concat!(
+        // shinjitai whose form differs from both simplified and traditional Chinese
+        "亜悪圧囲壱栄営円応仮価壊拡覚楽勧関歓観陥帰挙暁勲軽継鶏権検険顕験厳戸",
+        "鉱剤桜雑賛歯収従獣縦処焼奨浄譲醸図専単弾団遅逓鉄転読悩脳拝廃髪抜払仏",
+        "変辺舗満薬様謡猟塁録実対巣揺帯沢択済亀剣騒総捜蔵暦",
+        // kokuji: characters coined in Japan
+        "峠込匂噂枠働麿凪",
+    )
+    .chars()
+    .collect()
+});
 pub(crate) static MULTIPLE_WHITESPACE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new("\\s+").unwrap());
 pub(crate) static NUMBERS: LazyLock<Regex> = LazyLock::new(|| Regex::new("\\p{N}").unwrap());
@@ -1034,3 +1061,60 @@ pub(crate) static CHARS_TO_LANGUAGES_MAPPING: LazyLock<HashMap<&'static str, Has
 
         mapping
     });
+
+#[cfg(all(test, feature = "chinese", feature = "japanese"))]
+mod tests {
+    use super::*;
+    use crate::model::load_ngram_probability_model;
+
+    /// Guards the curated set in [`JAPANESE_UNIQUE_KANJI`]: a character that also
+    /// occurs in Chinese would drag genuine Chinese text towards Japanese, so no
+    /// entry may be present in the Chinese language model.
+    #[test]
+    fn test_japanese_unique_kanji_are_absent_from_chinese_model() {
+        let chinese_model = load_ngram_probability_model(Language::Chinese).unwrap();
+        let offenders = JAPANESE_UNIQUE_KANJI
+            .iter()
+            .filter(|character| {
+                chinese_model
+                    .ngrams
+                    .contains_key(character.to_string().as_bytes())
+            })
+            .collect::<Vec<_>>();
+
+        assert!(
+            offenders.is_empty(),
+            "these characters are not exclusive to Japanese: {offenders:?}"
+        );
+    }
+
+    /// Counterpart of the test above: an entry that no Japanese text actually uses
+    /// would be dead weight, so every character must occur in the Japanese model.
+    #[test]
+    fn test_japanese_unique_kanji_are_present_in_japanese_model() {
+        let japanese_model = load_ngram_probability_model(Language::Japanese).unwrap();
+        let missing = JAPANESE_UNIQUE_KANJI
+            .iter()
+            .filter(|character| {
+                !japanese_model
+                    .ngrams
+                    .contains_key(character.to_string().as_bytes())
+            })
+            .collect::<Vec<_>>();
+
+        assert!(
+            missing.is_empty(),
+            "these characters do not occur in the Japanese model: {missing:?}"
+        );
+    }
+
+    #[test]
+    fn test_japanese_unique_kanji_contains_only_han_characters() {
+        let non_han = JAPANESE_UNIQUE_KANJI
+            .iter()
+            .filter(|character| !crate::alphabet::Alphabet::Han.matches_char(**character))
+            .collect::<Vec<_>>();
+
+        assert!(non_han.is_empty(), "not Han characters: {non_han:?}");
+    }
+}
