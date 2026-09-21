@@ -8,6 +8,8 @@
   use Ethiopic and Bengali scripts respectively; Kannada/Lao/Malayalam each
   introduce new scripts; Kurdish (Kurmanji) and Uzbek use Latin script.)
 
+## Lingua 1.8.1 (not yet released)
+
 ### Bug Fixes
 
 - Japanese text written entirely in kanji, such as `携帯` or `図書館`, was always
