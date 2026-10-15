@@ -1,22 +1,6 @@
-## Lingua 1.9.0 (not yet released)
-
-### Languages
-
-- Six new languages are now supported: Amharic, Assamese, Kannada, Kurdish,
-  Lao, Malayalam, and Uzbek. Thanks to their dedicated language models,
-  *Lingua* can now detect 82 languages in total. (Note: Amharic and Assamese
-  use Ethiopic and Bengali scripts respectively; Kannada/Lao/Malayalam each
-  introduce new scripts; Kurdish (Kurmanji) and Uzbek use Latin script.)
+## Lingua 1.9.1 (not yet released)
 
 ### Bug Fixes
-
-- Japanese text written entirely in kanji, such as `携帯` or `図書館`, was always
-  detected as Chinese with a confidence of 1.0. The rule-based stage of the
-  detector attributed every `Han` character to Chinese and returned before any
-  language model was consulted, so Japanese could only win if the text also
-  contained at least one hiragana or katakana character. Kanji that exist in
-  neither simplified nor traditional Chinese are now recognised as evidence for
-  Japanese.
 
 - Text written only in Chinese characters is now decided by those characters
   alone. A kanji that only Japanese uses, such as `帯` or `図`, makes it
@@ -37,6 +21,26 @@
   accuracy for single words (100% → 36%) and word pairs (100% → 45%). Chinese
   sentences are nearly unaffected (729 → 727 of 729), and no text is detected
   as the wrong language.
+
+## Lingua 1.9.0 (not yet released)
+
+### Languages
+
+- Six new languages are now supported: Amharic, Assamese, Kannada, Kurdish,
+  Lao, Malayalam, and Uzbek. Thanks to their dedicated language models,
+  *Lingua* can now detect 82 languages in total. (Note: Amharic and Assamese
+  use Ethiopic and Bengali scripts respectively; Kannada/Lao/Malayalam each
+  introduce new scripts; Kurdish (Kurmanji) and Uzbek use Latin script.)
+
+### Bug Fixes
+
+- Japanese text written entirely in kanji, such as `携帯` or `図書館`, was always
+  detected as Chinese with a confidence of 1.0. The rule-based stage of the
+  detector attributed every `Han` character to Chinese and returned before any
+  language model was consulted, so Japanese could only win if the text also
+  contained at least one hiragana or katakana character. Kanji that exist in
+  neither simplified nor traditional Chinese are now recognised as evidence for
+  Japanese.
 
 ## Lingua 1.8.0 (released on 9 Mar 2026)
 
