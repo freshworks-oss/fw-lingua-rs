@@ -65,6 +65,7 @@ required-features = ["accuracy-reports"]
 [[bin]]
 name = "build_language_models"
 path = "src/bin/build_language_models/main.rs"
+required-features = ["assamese", "kannada", "kurdish", "lao", "malayalam", "uzbek"]
 
 [[bench]]
 name = "benchmark"
