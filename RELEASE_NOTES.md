@@ -16,15 +16,27 @@
   language model was consulted, so Japanese could only win if the text also
   contained at least one hiragana or katakana character. Kanji that exist in
   neither simplified nor traditional Chinese are now recognised as evidence for
-  Japanese. Text written only in characters that Chinese and Japanese share,
-  such as `自動車`, remains ambiguous and is still reported as Chinese.
+  Japanese.
 
-- Some words are common, identically-spelled vocabulary in both Chinese and
-  Japanese, such as `報酬` ("remuneration"), and carry no signal for either
-  language. When such a word is the entire input, the detector now reports no
-  language instead of defaulting to Chinese. Text that additionally contains
-  hiragana, katakana or a kanji exclusive to Japanese is unaffected, e.g.
-  `報酬を受け取る` still resolves to Japanese.
+- Text written only in Chinese characters is now decided by those characters
+  alone. A kanji that only Japanese uses, such as `帯` or `図`, makes it
+  Japanese. A character that only Chinese uses makes it Chinese: simplified
+  forms such as `这` or `报`, and traditional forms that Japanese replaced, such
+  as `學` (`学`) or `國` (`国`). If every character is used in both languages,
+  as in `報酬` ("remuneration") or `自動車` ("car"), no language is reported,
+  because the text itself gives nothing to decide by. Previously such text was
+  always reported as Chinese with a confidence of 1.0. The character sets are
+  generated from the Unicode Han Database by
+  `scripts/generate_cjk_kanji_sets.py`, not from the language models, which
+  cannot be relied on to tell the two languages apart. Text that also contains
+  hiragana, katakana or any other script is detected as before, e.g.
+  `報酬を受け取る` is still Japanese.
+
+  Single words and short phrases made of shared characters, such as `中国` or
+  `工`, now return no language as well. This lowers the reported Chinese
+  accuracy for single words (100% → 36%) and word pairs (100% → 45%). Chinese
+  sentences are nearly unaffected (729 → 727 of 729), and no text is detected
+  as the wrong language.
 
 ## Lingua 1.8.0 (released on 9 Mar 2026)
 
