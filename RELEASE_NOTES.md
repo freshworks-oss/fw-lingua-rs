@@ -1,35 +1,34 @@
-## Lingua 1.9.1 (not yet released)
+## Lingua 1.10.0 (not yet released)
+
+### Improvements
+
+- Text written only with Chinese characters that both Chinese and Japanese
+  use, such as `報酬` ("remuneration") or `自動車` ("car"), is now reported as
+  the new label `Language::Ambiguous` (`Language.AMBIGUOUS` in Python, ISO
+  code `und`) with a confidence of 1.0, where 1.9.1 reported no language.
+  Callers can therefore tell it apart from the cases that still return no
+  language, such as text without letters or in an unsupported script.
+  `Ambiguous` is only ever a result: it is not part of `Language::all()`, has
+  no language model, and a detector cannot be built from it alone. The
+  existing values of `Language`, `IsoCode639_1` and `IsoCode639_3` keep their
+  positions, so their integer values in Python are unchanged.
+
+- 641 of the 1000 Chinese single words and 554 of the 1000 word pairs in the
+  test data were written only with characters Japanese also uses, so they
+  measured `Ambiguous` rather than Chinese. They were replaced by samples
+  containing a character only Chinese uses
+  (`scripts/update_chinese_testdata.py`). Chinese accuracy on the updated
+  data is 100% for single words and word pairs and 99.73% for sentences,
+  where 2 of 729 sentences are `Ambiguous`.
 
 ### Bug Fixes
 
-- Text written only in Chinese characters is now decided by those characters
-  alone. A kanji that only Japanese uses, such as `帯` or `図`, makes it
-  Japanese. A character that only Chinese uses makes it Chinese: simplified
-  forms such as `这` or `报`, and traditional forms that Japanese replaced, such
-  as `學` (`学`) or `國` (`国`). If every character is used in both languages,
-  as in `報酬` ("remuneration") or `自動車` ("car"), the new label
-  `Language::Ambiguous` (`Language.AMBIGUOUS` in Python, ISO code `und`) is
-  reported with a confidence of 1.0, because the text itself gives nothing to
-  decide by. Previously such text was always reported as Chinese with a
-  confidence of 1.0. `Ambiguous` is only ever a result: it is not part of
-  `Language::all()` and has no language model, and a detector cannot be
-  built from it alone. The character sets are generated from the Unicode Han
-  Database by `scripts/generate_cjk_kanji_sets.py`, not from the language
-  models, which cannot be relied on to tell the two languages apart. The
-  Japanese marks `々`, `〻` and `〆` and name variants such as `髙` and `﨑`
-  count as Japanese, so `人々` and `髙橋` are Japanese, and the ideographic
-  zero `〇` counts as shared. Text that also contains hiragana, katakana or
-  any other script is detected as before, e.g. `報酬を受け取る` is still
-  Japanese.
-
-  Single words and short phrases made of shared characters, such as `中国` or
-  `工`, are reported as `Ambiguous` as well. 641 of the 1000 Chinese single
-  words and 554 of the 1000 word pairs in the test data were of this kind, so
-  they were replaced by samples containing a character only Chinese uses
-  (`scripts/update_chinese_testdata.py`); on the original test data Chinese
-  accuracy would read 36% for single words and 45% for word pairs. On the
-  updated data it is 100% for both and 99.73% for sentences, where 2 of 729
-  sentences are `Ambiguous`. No text is detected as the wrong language.
+- Japanese words written with the iteration marks `々` and `〻` or the mark
+  `〆`, such as `人々`, `時々` and `〆切`, and with name variants such as `髙`
+  and `﨑`, as in `髙橋` and `山﨑`, were detected as Chinese, because these
+  characters are missing from the official kanji lists. They now count as
+  Japanese, and the ideographic zero `〇` counts as shared by both
+  languages.
 
 - Bengali text was often detected as Assamese, which uses the same script:
   only 44.6% of Bengali single words, 44.0% of word pairs and 72.3% of
@@ -42,6 +41,30 @@
   63.0%; Assamese changes from 97.7% to 97.4% on average. Text containing
   none of these letters is still decided by the language models, which
   continue to favour Assamese.
+
+## Lingua 1.9.1 (not yet released)
+
+### Bug Fixes
+
+- Text written only in Chinese characters is now decided by those characters
+  alone. A kanji that only Japanese uses, such as `帯` or `図`, makes it
+  Japanese. A character that only Chinese uses makes it Chinese: simplified
+  forms such as `这` or `报`, and traditional forms that Japanese replaced, such
+  as `學` (`学`) or `國` (`国`). If every character is used in both languages,
+  as in `報酬` ("remuneration") or `自動車` ("car"), no language is reported,
+  because the text itself gives nothing to decide by. Previously such text was
+  always reported as Chinese with a confidence of 1.0. The character sets are
+  generated from the Unicode Han Database by
+  `scripts/generate_cjk_kanji_sets.py`, not from the language models, which
+  cannot be relied on to tell the two languages apart. Text that also contains
+  hiragana, katakana or any other script is detected as before, e.g.
+  `報酬を受け取る` is still Japanese.
+
+  Single words and short phrases made of shared characters, such as `中国` or
+  `工`, now return no language as well. This lowers the reported Chinese
+  accuracy for single words (100% → 36%) and word pairs (100% → 45%). Chinese
+  sentences are nearly unaffected (729 → 727 of 729), and no text is detected
+  as the wrong language.
 
 ## Lingua 1.9.0 (not yet released)
 
