@@ -30,17 +30,29 @@ Writes:
     src/data/japanese_usable_kanji.txt
         Kanji that occur in Japanese text: the official Jōyō and Jinmeiyō
         lists, plus the JIS X 0208 kanji that Japanese has no modern
-        replacement for (e.g. 嘘, 罠, 鹸). Old forms that Japanese replaced,
-        such as 學 (now 学) or 國 (now 国), are excluded, so they keep counting
-        as evidence for Chinese.
+        replacement for (e.g. 嘘, 罠, 鹸), plus EXTRA_JAPANESE_ONLY and
+        EXTRA_SHARED. Old forms that Japanese replaced, such as 學 (now 学) or
+        國 (now 国), are excluded, so they keep counting as evidence for
+        Chinese.
     src/data/japanese_unique_kanji.txt
         Jōyō and Jinmeiyō kanji that are in neither the simplified (通用规范汉字表)
-        nor the traditional (Big5) Chinese standard, e.g. 帯, 図, 峠.
+        nor the traditional (Big5) Chinese standard, e.g. 帯, 図, 峠, plus
+        EXTRA_JAPANESE_ONLY.
 """
 
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+# Characters of the Han script that the official lists leave out:
+# the iteration marks 々 and 〻 and the closing mark 〆, which only Japanese
+# uses, and variants used in Japanese personal and place names (髙橋, 山﨑,
+# 𠮷野家) that are in neither Chinese standard and not in the Chinese test
+# data. Without them, 人々 or 髙橋 would count as Chinese.
+EXTRA_JAPANESE_ONLY = set("々〆〻髙﨑嵜𠮷濵邉")
+
+# The ideographic zero, used in both languages (二〇二六年).
+EXTRA_SHARED = set("〇")
 
 VARIANT_FIELDS = {
     "kSimplifiedVariant",
@@ -90,7 +102,8 @@ def main(unihan_dir):
     usable = official | (jis - old_forms)
 
     chinese = set(mappings["kTGH"]) | set(mappings["kBigFive"])
-    unique = official - chinese
+    unique = (official - chinese) | EXTRA_JAPANESE_ONLY
+    usable |= EXTRA_JAPANESE_ONLY | EXTRA_SHARED
 
     data = Path(__file__).resolve().parent.parent / "src" / "data"
     data.mkdir(exist_ok=True)

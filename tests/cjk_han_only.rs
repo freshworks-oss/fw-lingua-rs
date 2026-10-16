@@ -21,8 +21,8 @@
 //! `scripts/generate_cjk_han_only_test_set.py` and holds real Chinese and
 //! Japanese words in five classes: Chinese-only, Japanese-only, shared
 //! characters combined with Chinese-only or Japanese-only ones, and words
-//! written only with characters both languages use, which must not be
-//! assigned to either language.
+//! written only with characters both languages use, which must be reported
+//! as `Language::Ambiguous` rather than as either language.
 
 use std::collections::BTreeMap;
 
@@ -43,7 +43,7 @@ fn test_han_only_text_is_detected_according_to_its_characters() {
         let expected = match expected {
             "Chinese" => Some(Language::Chinese),
             "Japanese" => Some(Language::Japanese),
-            "None" => None,
+            "Ambiguous" => Some(Language::Ambiguous),
             other => panic!("unknown expected language {other:?}"),
         };
         *totals.entry(class).or_default() += 1;

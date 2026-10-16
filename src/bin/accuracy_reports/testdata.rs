@@ -101,6 +101,8 @@ use lingua_zulu_language_model::ZULU_TESTDATA_DIRECTORY;
 
 pub(crate) fn get_test_data_directory(language: &Language) -> Dir<'static> {
     match *language {
+        // a label, not a language, so there is no test data for it
+        Language::Ambiguous => Dir::new("", &[]),
         Language::Afrikaans => AFRIKAANS_TESTDATA_DIRECTORY,
         Language::Albanian => ALBANIAN_TESTDATA_DIRECTORY,
         Language::Amharic => AMHARIC_TESTDATA_DIRECTORY,

@@ -25,7 +25,7 @@ scripts/generate_cjk_kanji_sets.py:
     common_with_chinese   shared characters plus Chinese-only ones   -> Chinese
     japanese_only         only kanji that Chinese does not use       -> Japanese
     common_with_japanese  shared characters plus Japanese-only ones  -> Japanese
-    common                only characters both languages use         -> None
+    common                only characters both languages use         -> Ambiguous
 
 Real words written only with Japanese-only kanji are rare in the corpus, so
 that class is topped up with hand-picked vocabulary, which is checked against
@@ -111,7 +111,7 @@ def main():
         "common_with_chinese": "Chinese",
         "japanese_only": "Japanese",
         "common_with_japanese": "Japanese",
-        "common": "None",
+        "common": "Ambiguous",
     }
     rows = []
     for (name, origin), words in sorted(classes.items()):

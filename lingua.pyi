@@ -154,6 +154,11 @@ class Language(Enum):
     XHOSA = 80
     YORUBA = 81
     ZULU = 82
+    AMBIGUOUS = 83
+    """Reported instead of a language when text is written only with
+    Chinese characters that both Chinese and Japanese use, such as 報酬.
+    It is never a candidate language and is not part of `Language.all()`.
+    """
 
     @property
     def iso_code_639_1(self) -> IsoCode639_1:
@@ -304,6 +309,8 @@ class IsoCode639_1(Enum):
     YO = 80
     ZH = 81
     ZU = 82
+    UND = 83
+    """The code for an undetermined language, used for `Language.AMBIGUOUS`."""
 
     @classmethod
     def from_str(cls, string: str) -> "IsoCode639_1":
@@ -404,6 +411,8 @@ class IsoCode639_3(Enum):
     YOR = 80
     ZHO = 81
     ZUL = 82
+    UND = 83
+    """The code for an undetermined language, used for `Language.AMBIGUOUS`."""
 
     @classmethod
     def from_str(cls, string: str) -> "IsoCode639_3":

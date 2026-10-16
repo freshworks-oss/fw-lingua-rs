@@ -193,7 +193,12 @@ impl LanguageDetectorBuilder {
         )
     }
 
-    fn from(languages: HashSet<Language>) -> Self {
+    fn from(mut languages: HashSet<Language>) -> Self {
+        // labels such as Ambiguous are results, not languages to detect
+        languages.retain(Language::is_detectable);
+        if languages.is_empty() {
+            panic!("{}", MISSING_LANGUAGE_MESSAGE);
+        }
         Self {
             languages,
             minimum_relative_distance: 0.0,

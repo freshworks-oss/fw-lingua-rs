@@ -15,31 +15,20 @@
  */
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Display, Formatter, Result};
 use std::str::FromStr;
+use std::sync::LazyLock;
 use strum::IntoEnumIterator;
-use strum_macros::{EnumIter, EnumString};
+use strum_macros::EnumIter;
 
 use crate::alphabet::Alphabet;
 use crate::isocode::{IsoCode639_1, IsoCode639_3};
 
 /// This enum specifies the so far 82 supported languages which can be detected by *Lingua*.
 #[derive(
-    Clone,
-    Copy,
-    Debug,
-    Serialize,
-    Deserialize,
-    EnumIter,
-    EnumString,
-    Eq,
-    PartialEq,
-    Hash,
-    Ord,
-    PartialOrd,
+    Clone, Copy, Debug, Serialize, Deserialize, EnumIter, Eq, PartialEq, Hash, Ord, PartialOrd,
 )]
-#[strum(ascii_case_insensitive)]
 #[cfg_attr(feature = "accuracy-reports", derive(clap::ValueEnum))]
 #[cfg_attr(
     feature = "python",
@@ -299,12 +288,42 @@ pub enum Language {
 
     #[cfg(feature = "zulu")]
     Zulu,
+
+    /// Reported instead of a language when Han-only text is written entirely
+    /// with characters that both Chinese and Japanese use, such as 報酬, so that
+    /// nothing in the text decides between the two. It is never a candidate
+    /// language and has no language model.
+    #[cfg(all(feature = "chinese", feature = "japanese"))]
+    #[strum(disabled)]
+    #[cfg_attr(feature = "accuracy-reports", value(skip))]
+    Ambiguous,
 }
 
 impl Display for Language {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let debug_repr = format!("{self:?}");
         write!(f, "{}", debug_repr)
+    }
+}
+
+/// Parses a language from its name, ignoring ASCII case. Unlike
+/// [`Language::iter`], this also accepts labels such as
+/// [`Language::Ambiguous`], so that every value round-trips through its name,
+/// as Python pickling and the WebAssembly bindings require.
+impl FromStr for Language {
+    type Err = strum::ParseError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        static LANGUAGES_BY_NAME: LazyLock<HashMap<String, Language>> = LazyLock::new(|| {
+            Language::iter()
+                .chain(Language::labels())
+                .map(|language| (language.to_string().to_ascii_lowercase(), language))
+                .collect()
+        });
+        LANGUAGES_BY_NAME
+            .get(&s.to_ascii_lowercase())
+            .copied()
+            .ok_or(strum::ParseError::VariantNotFound)
     }
 }
 
@@ -370,6 +389,7 @@ impl Language {
     /// passed to this method.
     pub fn from_iso_code_639_1(iso_code: &IsoCode639_1) -> Language {
         Language::iter()
+            .chain(Language::labels())
             .find(|it| &it.iso_code_639_1() == iso_code)
             .unwrap()
     }
@@ -378,13 +398,34 @@ impl Language {
     /// passed to this method.
     pub fn from_iso_code_639_3(iso_code: &IsoCode639_3) -> Language {
         Language::iter()
+            .chain(Language::labels())
             .find(|it| &it.iso_code_639_3() == iso_code)
             .unwrap()
+    }
+
+    /// Whether a detector can use this value as a candidate. Labels such as
+    /// [`Language::Ambiguous`] are detection results only, so they cannot.
+    pub(crate) fn is_detectable(&self) -> bool {
+        !Language::labels().any(|label| label == *self)
+    }
+
+    /// Variants that are detection results rather than languages. They are
+    /// excluded from [`Language::iter`] so that no detector uses them as a
+    /// candidate.
+    fn labels() -> impl Iterator<Item = Language> {
+        [
+            #[cfg(all(feature = "chinese", feature = "japanese"))]
+            Language::Ambiguous,
+        ]
+        .into_iter()
     }
 
     /// Returns the ISO 639-1 code of this language.
     pub fn iso_code_639_1(&self) -> IsoCode639_1 {
         match self {
+            #[cfg(all(feature = "chinese", feature = "japanese"))]
+            Language::Ambiguous => IsoCode639_1::UND,
+
             #[cfg(feature = "afrikaans")]
             Language::Afrikaans => IsoCode639_1::AF,
 
@@ -636,6 +677,9 @@ impl Language {
     /// Returns the ISO 639-3 code of this language.
     pub fn iso_code_639_3(&self) -> IsoCode639_3 {
         match self {
+            #[cfg(all(feature = "chinese", feature = "japanese"))]
+            Language::Ambiguous => IsoCode639_3::UND,
+
             #[cfg(feature = "afrikaans")]
             Language::Afrikaans => IsoCode639_3::AFR,
 
@@ -886,6 +930,10 @@ impl Language {
 
     pub(crate) fn alphabets(&self) -> HashSet<Alphabet> {
         match self {
+            #[cfg(all(feature = "chinese", feature = "japanese"))]
+            // a label, not a language: it must never match a script
+            Language::Ambiguous => hashset!(),
+
             #[cfg(feature = "afrikaans")]
             Language::Afrikaans => hashset!(Alphabet::Latin),
 
@@ -1212,6 +1260,27 @@ mod tests {
     #[test]
     fn assert_language_string_representation_is_correct() {
         assert_eq!(English.to_string(), "English");
+    }
+
+    #[test]
+    fn test_ambiguous_label_iso_codes_and_name_round_trip() {
+        assert_eq!(Language::Ambiguous.iso_code_639_1(), IsoCode639_1::UND);
+        assert_eq!(Language::Ambiguous.iso_code_639_3(), IsoCode639_3::UND);
+        assert_eq!(Language::Ambiguous.iso_code_639_1().to_string(), "und");
+        assert_eq!(
+            Language::from_iso_code_639_1(&IsoCode639_1::UND),
+            Language::Ambiguous
+        );
+        assert_eq!(
+            Language::from_iso_code_639_3(&IsoCode639_3::UND),
+            Language::Ambiguous
+        );
+        assert_eq!(Language::from_str("Ambiguous"), Ok(Language::Ambiguous));
+        assert_eq!(Language::from_str("ambiguous"), Ok(Language::Ambiguous));
+        assert_eq!(
+            Language::from_str(&Language::Ambiguous.to_string()),
+            Ok(Language::Ambiguous)
+        );
     }
 
     #[test]

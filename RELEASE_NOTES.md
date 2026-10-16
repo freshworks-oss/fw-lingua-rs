@@ -1,3 +1,47 @@
+## Lingua 1.10.0 (not yet released)
+
+### Improvements
+
+- Text written only with Chinese characters that both Chinese and Japanese
+  use, such as `報酬` ("remuneration") or `自動車` ("car"), is now reported as
+  the new label `Language::Ambiguous` (`Language.AMBIGUOUS` in Python, ISO
+  code `und`) with a confidence of 1.0, where 1.9.1 reported no language.
+  Callers can therefore tell it apart from the cases that still return no
+  language, such as text without letters or in an unsupported script.
+  `Ambiguous` is only ever a result: it is not part of `Language::all()`, has
+  no language model, and a detector cannot be built from it alone. The
+  existing values of `Language`, `IsoCode639_1` and `IsoCode639_3` keep their
+  positions, so their integer values in Python are unchanged.
+
+- 641 of the 1000 Chinese single words and 554 of the 1000 word pairs in the
+  test data were written only with characters Japanese also uses, so they
+  measured `Ambiguous` rather than Chinese. They were replaced by samples
+  containing a character only Chinese uses
+  (`scripts/update_chinese_testdata.py`). Chinese accuracy on the updated
+  data is 100% for single words and word pairs and 99.73% for sentences,
+  where 2 of 729 sentences are `Ambiguous`.
+
+### Bug Fixes
+
+- Japanese words written with the iteration marks `々` and `〻` or the mark
+  `〆`, such as `人々`, `時々` and `〆切`, and with name variants such as `髙`
+  and `﨑`, as in `髙橋` and `山﨑`, were detected as Chinese, because these
+  characters are missing from the official kanji lists. They now count as
+  Japanese, and the ideographic zero `〇` counts as shared by both
+  languages.
+
+- Bengali text was often detected as Assamese, which uses the same script:
+  only 44.6% of Bengali single words, 44.0% of word pairs and 72.3% of
+  sentences were recognised. Since Assamese was added, the rules could not
+  separate the two languages, and the Assamese language model, trained on a
+  far larger corpus, outscores the Bengali one. Text in the Bengali script is
+  now decided by the letters only one language uses: `ৰ` or `ৱ` makes it
+  Assamese, otherwise `র` makes it Bengali. Bengali sentences are now
+  recognised in 99.1% of cases, word pairs in 81.4% and single words in
+  63.0%; Assamese changes from 97.7% to 97.4% on average. Text containing
+  none of these letters is still decided by the language models, which
+  continue to favour Assamese.
+
 ## Lingua 1.9.1 (not yet released)
 
 ### Bug Fixes
