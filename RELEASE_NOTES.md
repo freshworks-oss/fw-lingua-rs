@@ -1,3 +1,13 @@
+## Lingua 1.10.1 (not yet released)
+
+### Bug Fixes
+
+- The Python wheels were built for CPython 3.12 only (tag `cp312-cp312`)
+  instead of for every CPython from 3.12 on (tag `cp312-abi3`), because
+  merging the upstream dependency updates dropped pyo3's `abi3-py312`
+  feature. It is restored, so the wheels install on Python 3.12, 3.13, 3.14
+  and later again.
+
 ## Lingua 1.10.0 (not yet released)
 
 ### Improvements
