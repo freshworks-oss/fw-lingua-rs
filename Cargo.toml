@@ -14,7 +14,7 @@
 
 [package]
 name = "lingua"
-version = "1.9.0"
+version = "1.9.1"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
 An accurate natural language detection library, suitable for short text and mixed-language text
@@ -65,6 +65,7 @@ required-features = ["accuracy-reports"]
 [[bin]]
 name = "build_language_models"
 path = "src/bin/build_language_models/main.rs"
+required-features = ["assamese", "kannada", "kurdish", "lao", "malayalam", "uzbek"]
 
 [[bench]]
 name = "benchmark"

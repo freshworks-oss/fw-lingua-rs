@@ -30,7 +30,7 @@ use strum::IntoEnumIterator;
 use crate::alphabet::Alphabet;
 use crate::constant::{
     CHARS_TO_LANGUAGES_MAPPING, JAPANESE_CHARACTER_SET, JAPANESE_UNIQUE_KANJI,
-    TOKENS_WITH_OPTIONAL_WHITESPACE, TOKENS_WITHOUT_WHITESPACE,
+    JAPANESE_USABLE_KANJI, TOKENS_WITH_OPTIONAL_WHITESPACE, TOKENS_WITHOUT_WHITESPACE,
 };
 use crate::language::Language;
 use crate::model::{
@@ -628,6 +628,25 @@ impl LanguageDetector {
             return values;
         }
 
+        // Han-only text is decided by its characters alone: a kanji that only
+        // Japanese uses makes it Japanese, a character that only Chinese uses
+        // makes it Chinese, and if every character is used in both languages
+        // there is nothing to decide by, so no language is reported. Checked
+        // before any other stage so that no heuristic or statistical model
+        // still picks a winner for text that is identical in both languages.
+        match classify_han_only_text(&words, languages) {
+            Some(HanTextVerdict::Language(language)) => {
+                update_confidence_values(&mut values, language, 1.0);
+                values.sort_by(confidence_values_comparator);
+                return values;
+            }
+            Some(HanTextVerdict::SharedByChineseAndJapanese) => {
+                values.sort_by(confidence_values_comparator);
+                return values;
+            }
+            None => {}
+        }
+
         if (self.is_built_from_one_language || self.is_low_accuracy_mode_enabled)
             && let Some(language) = self.detect_language_with_unique_and_common_ngrams(&words)
         {
@@ -1219,6 +1238,52 @@ fn collect_single_language_alphabets(languages: &HashSet<Language>) -> HashMap<A
         .into_iter()
         .filter(|(_, language)| languages.contains(language))
         .collect()
+}
+
+#[derive(Debug, PartialEq)]
+enum HanTextVerdict {
+    Language(Language),
+    SharedByChineseAndJapanese,
+}
+
+/// Decides Han-only text between Chinese and Japanese by its characters:
+///
+/// - a kanji from [`JAPANESE_UNIQUE_KANJI`] is evidence for Japanese,
+/// - a character outside [`JAPANESE_USABLE_KANJI`] is evidence for Chinese,
+/// - every other character is used in both languages and is ignored.
+///
+/// Evidence for exactly one language decides the text. Without any evidence
+/// the text is [`HanTextVerdict::SharedByChineseAndJapanese`]. Evidence for
+/// both, text containing anything other than Han characters, and detectors
+/// that do not have both Chinese and Japanese as candidates return `None`,
+/// leaving the decision to the remaining detection stages.
+fn classify_han_only_text(
+    words: &[String],
+    languages: &HashSet<Language>,
+) -> Option<HanTextVerdict> {
+    if !cfg!(feature = "chinese") || !cfg!(feature = "japanese") {
+        return None;
+    }
+    let chinese = Language::from_str("Chinese").unwrap();
+    let japanese = Language::from_str("Japanese").unwrap();
+
+    if !languages.contains(&chinese)
+        || !languages.contains(&japanese)
+        || !words.iter().all(|word| Alphabet::Han.matches(word))
+    {
+        return None;
+    }
+
+    let characters = || words.iter().flat_map(|word| word.chars());
+    let has_japanese_evidence = characters().any(|c| JAPANESE_UNIQUE_KANJI.contains(&c));
+    let has_chinese_evidence = characters().any(|c| !JAPANESE_USABLE_KANJI.contains(&c));
+
+    match (has_japanese_evidence, has_chinese_evidence) {
+        (true, false) => Some(HanTextVerdict::Language(japanese)),
+        (false, true) => Some(HanTextVerdict::Language(chinese)),
+        (false, false) => Some(HanTextVerdict::SharedByChineseAndJapanese),
+        (true, true) => None,
+    }
 }
 
 fn confidence_values_comparator(first: &(Language, f64), second: &(Language, f64)) -> Ordering {
@@ -2125,6 +2190,78 @@ mod tests {
             detected_language, expected_language,
             "expected {:?} for word '{}', got {:?}",
             expected_language, word, detected_language
+        );
+    }
+
+    #[rstest(
+        text,
+        expected_language,
+        // every character is used in both Chinese and Japanese
+        case("報酬", None),
+        case("報酬額", None),
+        case("自動車", None),
+        case("電話", None),
+        case("中国", None),
+        // a single kanji that only Japanese uses decides the text
+        case("携帯", Some(Japanese)),
+        case("図書館", Some(Japanese)),
+        case("峠", Some(Japanese)),
+        // a single character that only Chinese uses decides the text:
+        // simplified forms such as 报 and 这, and traditional forms that
+        // Japanese replaced, such as 學 (学) and 國 (国)
+        case("报酬", Some(Chinese)),
+        case("这是一个测试", Some(Chinese)),
+        // 机 is the simplified form of 機, but it is also the Japanese kanji
+        // for "desk", so 手机 is written with characters both languages use
+        case("手机", None),
+        case("國立臺灣大學", Some(Chinese)),
+        // kanji that Japanese uses outside the official lists are not
+        // mistaken for Chinese
+        case("嘘", None),
+        case("石鹸", None),
+        // text that is not only Han is decided as before
+        case("報酬を受け取る", Some(Japanese)),
+        case("携帯を買った", Some(Japanese))
+    )]
+    fn assert_detect_language_of_han_only_text_works_correctly(
+        detector_for_all_languages: LanguageDetector,
+        text: &str,
+        expected_language: Option<Language>,
+    ) {
+        let detected_language = detector_for_all_languages.detect_language_of(text);
+        assert_eq!(
+            detected_language, expected_language,
+            "expected {:?} for text '{}', got {:?}",
+            expected_language, text, detected_language
+        );
+    }
+
+    #[rstest(
+        text,
+        languages,
+        expected_verdict,
+        case("報酬", hashset!(Chinese, Japanese), Some(HanTextVerdict::SharedByChineseAndJapanese)),
+        case("携帯", hashset!(Chinese, Japanese), Some(HanTextVerdict::Language(Japanese))),
+        case("报酬", hashset!(Chinese, Japanese), Some(HanTextVerdict::Language(Chinese))),
+        // evidence for both languages is left to the other detection stages
+        case("帯带", hashset!(Chinese, Japanese), None),
+        // non-Han text is left to the other detection stages
+        case("報酬を受け取る", hashset!(Chinese, Japanese), None),
+        case("報酬 fee", hashset!(Chinese, Japanese, English), None),
+        // without both Chinese and Japanese as candidates there is nothing to decide
+        case("報酬", hashset!(Japanese, English), None),
+        case("報酬", hashset!(Chinese, English), None)
+    )]
+    fn assert_han_only_text_classification_works_correctly(
+        text: &str,
+        languages: HashSet<Language>,
+        expected_verdict: Option<HanTextVerdict>,
+    ) {
+        let words = split_text_into_words(text);
+        assert_eq!(
+            classify_han_only_text(&words, &languages),
+            expected_verdict,
+            "unexpected verdict for text '{text}' with languages {languages:?}"
         );
     }
 
