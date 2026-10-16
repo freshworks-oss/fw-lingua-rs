@@ -14,7 +14,7 @@
 
 [package]
 name = "lingua"
-version = "1.10.0"
+version = "1.10.1"
 authors = ["Peter M. Stahl <pemistahl@gmail.com>"]
 description = """
 An accurate natural language detection library, suitable for short text and mixed-language text
@@ -172,7 +172,7 @@ clap = { version = "4.6.6", optional = true, features = ["derive"] }
 cld2 = { version = "1.0.2", optional = true }
 indoc = { version = "2.0.7", optional = true }
 polars = { version = "0.55.2", optional = true, features = ["csv", "lazy"] }
-pyo3 = { version = "0.29.2", optional = true }
+pyo3 = { version = "0.29.2", optional = true, features = ["abi3-py312"] }
 rayon = "1.12.0"
 serde-pickle = { version = "1.2.0", optional = true }
 titlecase = { version = "3.6.0", optional = true }
