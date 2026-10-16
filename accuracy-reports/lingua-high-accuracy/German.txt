@@ -4,7 +4,7 @@
 
 >> Detection of 1000 single words (average length: 9 chars)
 Accuracy: 73.80%
-Erroneously classified as Dutch: 2.30%, Danish: 2.20%, Latin: 2.10%, English: 2.00%, Bokmal: 1.50%, Basque: 1.20%, Italian: 1.20%, French: 1.10%, Esperanto: 1.00%, Swedish: 1.00%, Afrikaans: 0.80%, Tsonga: 0.70%, Yoruba: 0.70%, Nynorsk: 0.60%, Portuguese: 0.60%, Welsh: 0.60%, Finnish: 0.50%, Estonian: 0.40%, Irish: 0.40%, Polish: 0.40%, Sotho: 0.40%, Spanish: 0.40%, Swahili: 0.40%, Tswana: 0.40%, Bosnian: 0.30%, Icelandic: 0.30%, Tagalog: 0.30%, Albanian: 0.20%, Catalan: 0.20%, Croatian: 0.20%, Indonesian: 0.20%, Lithuanian: 0.20%, Maori: 0.20%, Romanian: 0.20%, Xhosa: 0.20%, Zulu: 0.20%, Latvian: 0.10%, Malay: 0.10%, Slovak: 0.10%, Slovene: 0.10%, Somali: 0.10%, Turkish: 0.10%
+Erroneously classified as Dutch: 2.30%, Danish: 2.20%, English: 2.00%, Latin: 1.80%, Bokmal: 1.50%, Basque: 1.20%, Italian: 1.20%, French: 1.10%, Esperanto: 1.00%, Swedish: 1.00%, Afrikaans: 0.80%, Tsonga: 0.70%, Yoruba: 0.70%, Nynorsk: 0.60%, Portuguese: 0.60%, Welsh: 0.60%, Finnish: 0.50%, Estonian: 0.40%, Irish: 0.40%, Polish: 0.40%, Sotho: 0.40%, Spanish: 0.40%, Swahili: 0.40%, Tswana: 0.40%, Uzbek: 0.40%, Bosnian: 0.30%, Icelandic: 0.30%, Albanian: 0.20%, Catalan: 0.20%, Croatian: 0.20%, Indonesian: 0.20%, Lithuanian: 0.20%, Maori: 0.20%, Romanian: 0.20%, Tagalog: 0.20%, Xhosa: 0.20%, Zulu: 0.20%, Latvian: 0.10%, Malay: 0.10%, Slovak: 0.10%, Slovene: 0.10%, Somali: 0.10%, Turkish: 0.10%
 
 >> Detection of 1000 word pairs (average length: 18 chars)
 Accuracy: 93.90%
