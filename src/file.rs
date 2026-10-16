@@ -226,6 +226,10 @@ pub(crate) fn read_test_data_file(language: Language, file_name: &str) -> std::i
 
 fn get_language_models_directory(language: Language) -> Dir<'static> {
     match language {
+        // a label, not a language, so there are no models for it
+        #[cfg(all(feature = "chinese", feature = "japanese"))]
+        Language::Ambiguous => Dir::new("", &[]),
+
         #[cfg(feature = "afrikaans")]
         Language::Afrikaans => AFRIKAANS_MODELS_DIRECTORY,
 
@@ -476,6 +480,10 @@ fn get_language_models_directory(language: Language) -> Dir<'static> {
 
 fn get_test_data_directory(language: Language) -> Dir<'static> {
     match language {
+        // a label, not a language, so there are no test data for it
+        #[cfg(all(feature = "chinese", feature = "japanese"))]
+        Language::Ambiguous => Dir::new("", &[]),
+
         #[cfg(feature = "afrikaans")]
         Language::Afrikaans => AFRIKAANS_TESTDATA_DIRECTORY,
 

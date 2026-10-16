@@ -370,6 +370,11 @@ pub enum IsoCode639_1 {
     #[cfg(feature = "zulu")]
     /// The ISO 639-1 code for [`Zulu`](crate::language::Language::Zulu)
     ZU,
+
+    #[cfg(all(feature = "chinese", feature = "japanese"))]
+    /// The ISO 639-3 code for an undetermined language, used for
+    /// [`Ambiguous`](crate::language::Language::Ambiguous)
+    UND,
 }
 
 /// This enum specifies the ISO 639-3 code representations for the supported languages.
@@ -723,6 +728,11 @@ pub enum IsoCode639_3 {
     #[cfg(feature = "zulu")]
     /// The ISO 639-3 code for [`Zulu`](crate::language::Language::Zulu)
     ZUL,
+
+    #[cfg(all(feature = "chinese", feature = "japanese"))]
+    /// The ISO 639-3 code for an undetermined language, used for
+    /// [`Ambiguous`](crate::language::Language::Ambiguous)
+    UND,
 }
 
 impl Display for IsoCode639_1 {

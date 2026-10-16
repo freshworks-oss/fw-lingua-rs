@@ -75,11 +75,14 @@ pub struct LanguageDetector {
 
 impl LanguageDetector {
     pub(crate) fn from(
-        languages: HashSet<Language>,
+        mut languages: HashSet<Language>,
         minimum_relative_distance: f64,
         is_every_language_model_preloaded: bool,
         is_low_accuracy_mode_enabled: bool,
     ) -> Self {
+        // Ambiguous is a detection result, never a language to detect.
+        #[cfg(all(feature = "chinese", feature = "japanese"))]
+        languages.remove(&Language::Ambiguous);
         let is_built_from_one_language = languages.len() == 1;
         let mut detector = Self {
             languages: languages.clone(),
@@ -631,7 +634,7 @@ impl LanguageDetector {
         // Han-only text is decided by its characters alone: a kanji that only
         // Japanese uses makes it Japanese, a character that only Chinese uses
         // makes it Chinese, and if every character is used in both languages
-        // there is nothing to decide by, so no language is reported. Checked
+        // there is nothing to decide by, so Language::Ambiguous is reported. Checked
         // before any other stage so that no heuristic or statistical model
         // still picks a winner for text that is identical in both languages.
         match classify_han_only_text(&words, languages) {
@@ -641,6 +644,8 @@ impl LanguageDetector {
                 return values;
             }
             Some(HanTextVerdict::SharedByChineseAndJapanese) => {
+                #[cfg(all(feature = "chinese", feature = "japanese"))]
+                values.push((Language::Ambiguous, 1.0));
                 values.sort_by(confidence_values_comparator);
                 return values;
             }
@@ -2196,12 +2201,13 @@ mod tests {
     #[rstest(
         text,
         expected_language,
-        // every character is used in both Chinese and Japanese
-        case("報酬", None),
-        case("報酬額", None),
-        case("自動車", None),
-        case("電話", None),
-        case("中国", None),
+        // every character is used in both Chinese and Japanese, so the
+        // Ambiguous label is reported instead of a language
+        case("報酬", Some(Ambiguous)),
+        case("報酬額", Some(Ambiguous)),
+        case("自動車", Some(Ambiguous)),
+        case("電話", Some(Ambiguous)),
+        case("中国", Some(Ambiguous)),
         // a single kanji that only Japanese uses decides the text
         case("携帯", Some(Japanese)),
         case("図書館", Some(Japanese)),
@@ -2213,12 +2219,12 @@ mod tests {
         case("这是一个测试", Some(Chinese)),
         // 机 is the simplified form of 機, but it is also the Japanese kanji
         // for "desk", so 手机 is written with characters both languages use
-        case("手机", None),
+        case("手机", Some(Ambiguous)),
         case("國立臺灣大學", Some(Chinese)),
         // kanji that Japanese uses outside the official lists are not
         // mistaken for Chinese
-        case("嘘", None),
-        case("石鹸", None),
+        case("嘘", Some(Ambiguous)),
+        case("石鹸", Some(Ambiguous)),
         // text that is not only Han is decided as before
         case("報酬を受け取る", Some(Japanese)),
         case("携帯を買った", Some(Japanese))
@@ -2263,6 +2269,30 @@ mod tests {
             expected_verdict,
             "unexpected verdict for text '{text}' with languages {languages:?}"
         );
+    }
+
+    #[rstest]
+    fn test_ambiguous_label_is_reported_with_full_confidence(
+        detector_for_all_languages: LanguageDetector,
+    ) {
+        let values = detector_for_all_languages.compute_language_confidence_values("報酬");
+        assert_eq!(values[0], (Ambiguous, 1.0));
+        assert!(values[1..].iter().all(|(_, confidence)| *confidence == 0.0));
+        assert_eq!(
+            detector_for_all_languages.compute_language_confidence("報酬", Chinese),
+            0.0
+        );
+        assert_eq!(
+            detector_for_all_languages.compute_language_confidence("報酬", Japanese),
+            0.0
+        );
+    }
+
+    #[test]
+    fn test_ambiguous_label_is_never_a_candidate_language() {
+        let detector = LanguageDetector::from(hashset!(Ambiguous, English), 0.0, false, false);
+        assert!(!detector.languages.contains(&Ambiguous));
+        assert!(!Language::all().contains(&Ambiguous));
     }
 
     #[rstest(word, expected_languages,
