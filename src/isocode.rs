@@ -372,8 +372,10 @@ pub enum IsoCode639_1 {
     ZU,
 
     #[cfg(all(feature = "chinese", feature = "japanese"))]
-    /// The ISO 639-3 code for an undetermined language, used for
-    /// [`Ambiguous`](crate::language::Language::Ambiguous)
+    /// Used for [`Ambiguous`](crate::language::Language::Ambiguous). ISO 639-1
+    /// has no code for an undetermined language, so this is the ISO 639-3
+    /// code `und`, as BCP 47 language tags use it. It is the only member of
+    /// this enum that is not two letters long.
     UND,
 }
 

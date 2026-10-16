@@ -1088,10 +1088,11 @@ mod tests {
 
     #[test]
     fn test_japanese_kanji_sets_contain_only_han_characters() {
+        // 〆 is the one Japanese mark outside the Han script that is listed
         let non_han = JAPANESE_USABLE_KANJI
             .iter()
             .chain(JAPANESE_UNIQUE_KANJI.iter())
-            .filter(|character| !Alphabet::Han.matches_char(**character))
+            .filter(|character| !Alphabet::Han.matches_char(**character) && **character != '〆')
             .collect::<Vec<_>>();
 
         assert!(non_han.is_empty(), "not Han characters: {non_han:?}");

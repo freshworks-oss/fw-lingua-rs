@@ -1284,7 +1284,11 @@ fn classify_han_only_text(
 
     if !languages.contains(&chinese)
         || !languages.contains(&japanese)
-        || !words.iter().all(|word| Alphabet::Han.matches(word))
+        || !words.iter().flat_map(|word| word.chars()).all(|character| {
+            // 〆 is a Japanese mark outside the Han script, so it is
+            // listed among the Japanese-only kanji instead
+            Alphabet::Han.matches_char(character) || JAPANESE_UNIQUE_KANJI.contains(&character)
+        })
     {
         return None;
     }
@@ -1325,21 +1329,17 @@ fn classify_bengali_script_text(
         return None;
     }
 
-    let letters = words.iter().flat_map(|word| word.chars()).collect_vec();
-    let bengali_script_letters = letters
-        .iter()
-        .filter(|letter| Alphabet::Bengali.matches_char(**letter))
+    let letters = || words.iter().flat_map(|word| word.chars());
+    let bengali_script_letters = letters()
+        .filter(|letter| Alphabet::Bengali.matches_char(*letter))
         .count();
 
-    if bengali_script_letters * 2 <= letters.len() {
+    if bengali_script_letters * 2 <= letters().count() {
         return None;
     }
-    if letters
-        .iter()
-        .any(|letter| ASSAMESE_ONLY_LETTERS.contains(letter))
-    {
+    if letters().any(|letter| ASSAMESE_ONLY_LETTERS.contains(&letter)) {
         Some(assamese)
-    } else if letters.contains(&BENGALI_ONLY_LETTER) {
+    } else if letters().any(|letter| letter == BENGALI_ONLY_LETTER) {
         Some(bengali)
     } else {
         None
@@ -2280,6 +2280,15 @@ mod tests {
         // mistaken for Chinese
         case("嘘", Some(Ambiguous)),
         case("石鹸", Some(Ambiguous)),
+        // marks that only Japanese uses: the iteration marks 々 and 〻 and 〆
+        case("人々", Some(Japanese)),
+        case("時々", Some(Japanese)),
+        case("〆切", Some(Japanese)),
+        // variants used in Japanese names
+        case("髙橋", Some(Japanese)),
+        case("山﨑", Some(Japanese)),
+        // the ideographic zero is used in both languages
+        case("二〇二六年", Some(Ambiguous)),
         // text that is not only Han is decided as before
         case("報酬を受け取る", Some(Japanese)),
         case("携帯を買った", Some(Japanese))
@@ -2395,6 +2404,12 @@ mod tests {
             detector_for_all_languages.compute_language_confidence("報酬", Japanese),
             0.0
         );
+    }
+
+    #[test]
+    #[should_panic(expected = "LanguageDetector needs at least 1 language to choose from")]
+    fn test_builder_rejects_only_the_ambiguous_label() {
+        crate::builder::LanguageDetectorBuilder::from_languages(&[Ambiguous]);
     }
 
     #[test]

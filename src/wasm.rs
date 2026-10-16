@@ -125,6 +125,7 @@ impl LanguageDetectorBuilder {
             .iter()
             .filter_map(|it| it.as_string())
             .filter_map(|it| Language::from_str(&it).ok())
+            .filter(Language::is_detectable)
             .collect_vec();
         languages_to_load.retain(|it| !languages_to_filter_out.contains(it));
 
@@ -149,6 +150,7 @@ impl LanguageDetectorBuilder {
             .iter()
             .filter_map(|it| it.as_string())
             .filter_map(|it| Language::from_str(&it).ok())
+            .filter(Language::is_detectable)
             .collect_vec();
 
         if selected_languages.is_empty() {
@@ -170,6 +172,7 @@ impl LanguageDetectorBuilder {
             .iter()
             .filter_map(|it| it.as_string())
             .filter_map(|it| IsoCode639_1::from_str(&it).ok())
+            .filter(|it| Language::from_iso_code_639_1(it).is_detectable())
             .collect_vec();
 
         if selected_iso_codes.is_empty() {
@@ -191,6 +194,7 @@ impl LanguageDetectorBuilder {
             .iter()
             .filter_map(|it| it.as_string())
             .filter_map(|it| IsoCode639_3::from_str(&it).ok())
+            .filter(|it| Language::from_iso_code_639_3(it).is_detectable())
             .collect_vec();
 
         if selected_iso_codes.is_empty() {

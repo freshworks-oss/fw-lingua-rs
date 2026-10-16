@@ -403,6 +403,12 @@ impl Language {
             .unwrap()
     }
 
+    /// Whether a detector can use this value as a candidate. Labels such as
+    /// [`Language::Ambiguous`] are detection results only, so they cannot.
+    pub(crate) fn is_detectable(&self) -> bool {
+        !Language::labels().any(|label| label == *self)
+    }
+
     /// Variants that are detection results rather than languages. They are
     /// excluded from [`Language::iter`] so that no detector uses them as a
     /// candidate.
@@ -925,7 +931,8 @@ impl Language {
     pub(crate) fn alphabets(&self) -> HashSet<Alphabet> {
         match self {
             #[cfg(all(feature = "chinese", feature = "japanese"))]
-            Language::Ambiguous => hashset!(Alphabet::Han),
+            // a label, not a language: it must never match a script
+            Language::Ambiguous => hashset!(),
 
             #[cfg(feature = "afrikaans")]
             Language::Afrikaans => hashset!(Alphabet::Latin),

@@ -12,18 +12,24 @@
   reported with a confidence of 1.0, because the text itself gives nothing to
   decide by. Previously such text was always reported as Chinese with a
   confidence of 1.0. `Ambiguous` is only ever a result: it is not part of
-  `Language::all()`, has no language model, and is ignored when passed to the
-  detector builder. The character sets are generated from the Unicode Han
+  `Language::all()` and has no language model, and a detector cannot be
+  built from it alone. The character sets are generated from the Unicode Han
   Database by `scripts/generate_cjk_kanji_sets.py`, not from the language
-  models, which cannot be relied on to tell the two languages apart. Text that also contains
-  hiragana, katakana or any other script is detected as before, e.g.
-  `報酬を受け取る` is still Japanese.
+  models, which cannot be relied on to tell the two languages apart. The
+  Japanese marks `々`, `〻` and `〆` and name variants such as `髙` and `﨑`
+  count as Japanese, so `人々` and `髙橋` are Japanese, and the ideographic
+  zero `〇` counts as shared. Text that also contains hiragana, katakana or
+  any other script is detected as before, e.g. `報酬を受け取る` is still
+  Japanese.
 
   Single words and short phrases made of shared characters, such as `中国` or
-  `工`, are reported as `Ambiguous` as well. This lowers the reported Chinese
-  accuracy for single words (100% → 36%) and word pairs (100% → 45%). Chinese
-  sentences are nearly unaffected (729 → 727 of 729), and no text is detected
-  as the wrong language.
+  `工`, are reported as `Ambiguous` as well. 641 of the 1000 Chinese single
+  words and 554 of the 1000 word pairs in the test data were of this kind, so
+  they were replaced by samples containing a character only Chinese uses
+  (`scripts/update_chinese_testdata.py`); on the original test data Chinese
+  accuracy would read 36% for single words and 45% for word pairs. On the
+  updated data it is 100% for both and 99.73% for sentences, where 2 of 729
+  sentences are `Ambiguous`. No text is detected as the wrong language.
 
 - Bengali text was often detected as Assamese, which uses the same script:
   only 44.6% of Bengali single words, 44.0% of word pairs and 72.3% of
