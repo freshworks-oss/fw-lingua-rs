@@ -29,8 +29,9 @@ use strum::IntoEnumIterator;
 
 use crate::alphabet::Alphabet;
 use crate::constant::{
-    CHARS_TO_LANGUAGES_MAPPING, JAPANESE_CHARACTER_SET, JAPANESE_UNIQUE_KANJI,
-    JAPANESE_USABLE_KANJI, TOKENS_WITH_OPTIONAL_WHITESPACE, TOKENS_WITHOUT_WHITESPACE,
+    ASSAMESE_ONLY_LETTERS, BENGALI_ONLY_LETTER, CHARS_TO_LANGUAGES_MAPPING, JAPANESE_CHARACTER_SET,
+    JAPANESE_UNIQUE_KANJI, JAPANESE_USABLE_KANJI, TOKENS_WITH_OPTIONAL_WHITESPACE,
+    TOKENS_WITHOUT_WHITESPACE,
 };
 use crate::language::Language;
 use crate::model::{
@@ -650,6 +651,15 @@ impl LanguageDetector {
                 return values;
             }
             None => {}
+        }
+
+        // Bengali and Assamese share the Bengali script, and their language
+        // models alone favour Assamese, so text that contains a letter only
+        // one of them uses is decided by that letter.
+        if let Some(language) = classify_bengali_script_text(&words, languages) {
+            update_confidence_values(&mut values, language, 1.0);
+            values.sort_by(confidence_values_comparator);
+            return values;
         }
 
         if (self.is_built_from_one_language || self.is_low_accuracy_mode_enabled)
@@ -1288,6 +1298,51 @@ fn classify_han_only_text(
         (false, true) => Some(HanTextVerdict::Language(chinese)),
         (false, false) => Some(HanTextVerdict::SharedByChineseAndJapanese),
         (true, true) => None,
+    }
+}
+
+/// Decides text written mainly in the Bengali script between Bengali and
+/// Assamese by the letters that only one of them uses: any of
+/// [`ASSAMESE_ONLY_LETTERS`] makes it Assamese, otherwise
+/// [`BENGALI_ONLY_LETTER`] makes it Bengali.
+///
+/// The decision is made for the text as a whole rather than word by word, as
+/// most words of a Bengali sentence contain neither letter. Returns `None`,
+/// leaving the decision to the remaining detection stages, for text with
+/// neither letter, text that is not mainly in the Bengali script, and
+/// detectors that do not have both languages as candidates.
+fn classify_bengali_script_text(
+    words: &[String],
+    languages: &HashSet<Language>,
+) -> Option<Language> {
+    if !cfg!(feature = "bengali") || !cfg!(feature = "assamese") {
+        return None;
+    }
+    let bengali = Language::from_str("Bengali").unwrap();
+    let assamese = Language::from_str("Assamese").unwrap();
+
+    if !languages.contains(&bengali) || !languages.contains(&assamese) {
+        return None;
+    }
+
+    let letters = words.iter().flat_map(|word| word.chars()).collect_vec();
+    let bengali_script_letters = letters
+        .iter()
+        .filter(|letter| Alphabet::Bengali.matches_char(**letter))
+        .count();
+
+    if bengali_script_letters * 2 <= letters.len() {
+        return None;
+    }
+    if letters
+        .iter()
+        .any(|letter| ASSAMESE_ONLY_LETTERS.contains(letter))
+    {
+        Some(assamese)
+    } else if letters.contains(&BENGALI_ONLY_LETTER) {
+        Some(bengali)
+    } else {
+        None
     }
 }
 
@@ -2268,6 +2323,60 @@ mod tests {
             classify_han_only_text(&words, &languages),
             expected_verdict,
             "unexpected verdict for text '{text}' with languages {languages:?}"
+        );
+    }
+
+    #[rstest(
+        text,
+        expected_language,
+        // র is written by Bengali where Assamese writes ৰ
+        case("বাজারের", Some(Bengali)),
+        case("থাকার", Some(Bengali)),
+        case("১ সেন্টিমিটার আকারের করে টুকরো করে নিন।", Some(Bengali)),
+        // ৰ and ৱ are written only by Assamese
+        case("শিবিৰ", Some(Assamese)),
+        case("মহোৎসৱ", Some(Assamese)),
+        case("2.3 অন্য পদাৰ্থ", Some(Assamese)),
+        // Assamese loanwords with র are still Assamese when ৰ is present
+        case("সাম্রাজ্যবাদৰ জার্মানিৰ", Some(Assamese))
+    )]
+    fn assert_bengali_script_text_is_detected_by_its_letters(
+        detector_for_all_languages: LanguageDetector,
+        text: &str,
+        expected_language: Option<Language>,
+    ) {
+        let detected_language = detector_for_all_languages.detect_language_of(text);
+        assert_eq!(
+            detected_language, expected_language,
+            "expected {:?} for text '{}', got {:?}",
+            expected_language, text, detected_language
+        );
+    }
+
+    #[rstest(
+        text,
+        languages,
+        expected_language,
+        case("বাজারের", hashset!(Bengali, Assamese), Some(Bengali)),
+        case("শিবিৰ", hashset!(Bengali, Assamese), Some(Assamese)),
+        // neither letter: left to the language models
+        case("তলদেশে", hashset!(Bengali, Assamese), None),
+        // not mainly in the Bengali script
+        case("the river near the camp শিবিৰ", hashset!(Bengali, Assamese, English), None),
+        // without both languages as candidates there is nothing to decide
+        case("শিবিৰ", hashset!(Bengali, English), None),
+        case("বাজারের", hashset!(Assamese, English), None)
+    )]
+    fn assert_bengali_script_text_classification_works_correctly(
+        text: &str,
+        languages: HashSet<Language>,
+        expected_language: Option<Language>,
+    ) {
+        let words = split_text_into_words(text);
+        assert_eq!(
+            classify_bengali_script_text(&words, &languages),
+            expected_language,
+            "unexpected result for text '{text}' with languages {languages:?}"
         );
     }
 

@@ -25,6 +25,18 @@
   sentences are nearly unaffected (729 → 727 of 729), and no text is detected
   as the wrong language.
 
+- Bengali text was often detected as Assamese, which uses the same script:
+  only 44.6% of Bengali single words, 44.0% of word pairs and 72.3% of
+  sentences were recognised. Since Assamese was added, the rules could not
+  separate the two languages, and the Assamese language model, trained on a
+  far larger corpus, outscores the Bengali one. Text in the Bengali script is
+  now decided by the letters only one language uses: `ৰ` or `ৱ` makes it
+  Assamese, otherwise `র` makes it Bengali. Bengali sentences are now
+  recognised in 99.1% of cases, word pairs in 81.4% and single words in
+  63.0%; Assamese changes from 97.7% to 97.4% on average. Text containing
+  none of these letters is still decided by the language models, which
+  continue to favour Assamese.
+
 ## Lingua 1.9.0 (not yet released)
 
 ### Languages

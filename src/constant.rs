@@ -62,6 +62,15 @@ pub(crate) static JAPANESE_UNIQUE_KANJI: LazyLock<HashSet<char>> = LazyLock::new
         .collect()
 });
 
+/// Letters that only Assamese uses among the languages written in the Bengali
+/// script: ৰ (ra) and ৱ (wa). Bengali writes র and ব instead.
+pub(crate) const ASSAMESE_ONLY_LETTERS: [char; 2] = ['ৰ', 'ৱ'];
+
+/// The letter র (ra) that Bengali uses where Assamese writes ৰ. Assamese text
+/// contains it only rarely, in loanwords and names, and then nearly always
+/// alongside ৰ or ৱ, which take precedence.
+pub(crate) const BENGALI_ONLY_LETTER: char = 'র';
+
 pub(crate) static MULTIPLE_WHITESPACE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new("\\s+").unwrap());
 pub(crate) static NUMBERS: LazyLock<Regex> = LazyLock::new(|| Regex::new("\\p{N}").unwrap());
