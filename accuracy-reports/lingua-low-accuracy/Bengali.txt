@@ -1,16 +1,16 @@
 ##### Bengali #####
 
->>> Accuracy on average: 75.87%
+>>> Accuracy on average: 87.83%
 
 >> Detection of 1000 single words (average length: 7 chars)
-Accuracy: 52.20%
-Erroneously classified as Assamese: 47.80%
+Accuracy: 72.40%
+Erroneously classified as Assamese: 27.60%
 
 >> Detection of 1000 word pairs (average length: 15 chars)
-Accuracy: 77.00%
-Erroneously classified as Assamese: 23.00%
+Accuracy: 91.40%
+Erroneously classified as Assamese: 8.60%
 
 >> Detection of 1000 sentences (average length: 87 chars)
-Accuracy: 98.40%
-Erroneously classified as Assamese: 1.50%, Yoruba: 0.10%
+Accuracy: 99.70%
+Erroneously classified as Assamese: 0.20%, Yoruba: 0.10%
 
