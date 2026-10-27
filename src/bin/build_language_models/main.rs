@@ -8,11 +8,13 @@ use lingua::{
 fn lang_meta(code: &str) -> (Language, &'static str, &'static str) {
     match code {
         "as" => (Language::Assamese, "as", "\\p{Bengali}"),
+        "id" => (Language::Indonesian, "id", "\\p{Latin}"),
         "kn" => (Language::Kannada, "kn", "\\p{Kannada}"),
         // Kurdish: Latin (Kurmanji) + Arabic (Sorani / Southern Kurdish)
         "ku" => (Language::Kurdish, "ku", "\\p{L}"),
         "lo" => (Language::Lao, "lo", "\\p{Lao}"),
         "ml" => (Language::Malayalam, "ml", "\\p{Malayalam}"),
+        "ms" => (Language::Malay, "ms", "\\p{Latin}"),
         "uz" => (Language::Uzbek, "uz", "\\p{L}"),
         other => panic!("unknown code: {other}"),
     }
@@ -22,7 +24,7 @@ fn main() {
     let mut args = std::env::args().skip(1);
     let mode = args
         .next()
-        .expect("mode required: testdata | model | unique | mostcommon");
+        .expect("mode required: testdata | model | augment | unique | mostcommon");
     let code = args.next().expect("language code required");
     let input_file = PathBuf::from(args.next().expect("input file required"));
     let repo_root = PathBuf::from(args.next().unwrap_or_else(|| {
@@ -56,6 +58,27 @@ fn main() {
                 char_class,
             )
             .expect("failed writing language model files");
+        }
+        "augment" => {
+            // Optional args: weight of the new corpus' counts, and the minimum count
+            // an ngram absent from the existing model needs in the new corpus.
+            let weight = args.next().map_or(1.0, |w| w.parse().expect("weight must be a number"));
+            let min_new_ngram_count = args
+                .next()
+                .map_or(5, |c| c.parse().expect("min_new_ngram_count must be an integer"));
+            println!(
+                "Augmenting language model for {code} in {} (weight={weight}, min_new_ngram_count={min_new_ngram_count})",
+                models_dir.display()
+            );
+            LanguageModelFilesWriter::augment_and_write_language_model_files(
+                input_file.as_path(),
+                models_dir.as_path(),
+                language,
+                char_class,
+                weight,
+                min_new_ngram_count,
+            )
+            .expect("failed augmenting language model files");
         }
         "unique" => {
             let staging = std::env::temp_dir().join("lingua_unique_staging");

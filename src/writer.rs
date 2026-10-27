@@ -137,6 +137,101 @@ impl LanguageModelFilesWriter {
         Ok(())
     }
 
+    /// Retrains an existing language model by adding the ngram counts of a new corpus
+    /// to the counts of the corpus the model was originally built from.
+    ///
+    /// The original absolute counts are reconstructed from `ngrams.fst` in
+    /// `output_directory_path`: every probability is stored as `ln(c(ngram) / c(prefix))`,
+    /// so the counts are recoverable up to a global scale, which is chosen such that
+    /// the rarest ngram has a count of 1. The new counts are multiplied by `weight`,
+    /// added, and all probabilities are recomputed, so ngrams already in the model are
+    /// re-estimated rather than kept as they were.
+    ///
+    /// Ngrams that only occur in the new corpus are added only if they occur there at
+    /// least `min_new_ngram_count` times, to keep typos and noise out of the model.
+    pub fn augment_and_write_language_model_files(
+        input_file_path: &Path,
+        output_directory_path: &Path,
+        language: Language,
+        char_class: &str,
+        weight: f64,
+        min_new_ngram_count: u32,
+    ) -> io::Result<()> {
+        check_input_file_path(input_file_path);
+        check_output_directory_path(output_directory_path);
+
+        let model_file_path = output_directory_path.join(NGRAM_PROBABILITY_MODEL_FILE_NAME);
+        let model_bytes = fs::read(&model_file_path)?;
+        let original_model = fst::Map::new(model_bytes).unwrap();
+
+        let mut original_ngrams: Vec<Vec<(String, f64)>> = vec![vec![]; 6];
+        let mut stream = original_model.stream();
+        while let Some((key, value)) = stream.next() {
+            let ngram = String::from_utf8(key.to_vec()).unwrap();
+            let length = ngram.chars().count();
+            original_ngrams[length].push((ngram, f64::from_bits(value)));
+        }
+
+        let mut counts: HashMap<String, f64> = HashMap::new();
+        for (length, ngrams) in original_ngrams.iter().enumerate().skip(1) {
+            for (ngram, log_probability) in ngrams {
+                let denominator = if length == 1 {
+                    1.0
+                } else {
+                    let prefix = ngram.chars().take(length - 1).collect::<String>();
+                    counts[&prefix]
+                };
+                counts.insert(ngram.clone(), log_probability.exp() * denominator);
+            }
+        }
+        let scale = counts.values().cloned().fold(f64::MAX, f64::min);
+        for count in counts.values_mut() {
+            *count = (*count / scale).round();
+        }
+
+        let mut lower_ngram_absolute_frequencies = hashmap!();
+        for ngram_length in 1..=5 {
+            let model = Self::create_language_model(
+                input_file_path,
+                &language,
+                ngram_length,
+                char_class,
+                &lower_ngram_absolute_frequencies,
+            )?;
+            for (ngram, frequency) in model.absolute_frequencies.iter() {
+                let is_known = counts.contains_key(&ngram.value);
+                if is_known || *frequency >= min_new_ngram_count {
+                    *counts.entry(ngram.value.clone()).or_insert(0.0) +=
+                        weight * *frequency as f64;
+                }
+            }
+            lower_ngram_absolute_frequencies = model.absolute_frequencies;
+        }
+
+        let unigram_total = counts
+            .iter()
+            .filter(|(ngram, _)| ngram.chars().count() == 1)
+            .map(|(_, count)| count)
+            .sum::<f64>();
+
+        let mut kvs = vec![];
+        for (ngram, count) in counts.iter() {
+            let length = ngram.chars().count();
+            let denominator = if length == 1 {
+                unigram_total
+            } else {
+                let prefix = ngram.chars().take(length - 1).collect::<String>();
+                counts[&prefix]
+            };
+            kvs.push((ngram.as_bytes().to_vec(), (count / denominator).ln().to_bits()));
+        }
+
+        let fst_map = create_fst_map(kvs);
+        fs::write(model_file_path, fst_map.as_fst().as_bytes())?;
+
+        Ok(())
+    }
+
     fn create_language_model(
         input_file_path: &Path,
         language: &Language,
@@ -921,6 +1016,71 @@ mod tests {
                 NGRAM_PROBABILITY_MODEL_FILE_NAME,
                 high_accuracy_model,
             );
+        }
+
+        const ORIGINAL_TEXT: &str = "these sentences are the original text\nand this is another one\n";
+        const NEW_TEXT: &str = "some newer sentences extend the text\nquizzical words appear here\n";
+
+        fn write_model(text: &str, output_directory: &Path) {
+            let input_file = create_temp_input_file(text);
+            LanguageModelFilesWriter::create_and_write_language_model_files(
+                input_file.path(),
+                output_directory,
+                Language::English,
+                "\\p{L}",
+            )
+            .unwrap();
+        }
+
+        fn read_model(output_directory: &Path) -> fst::Map<Vec<u8>> {
+            let bytes = fs::read(output_directory.join(NGRAM_PROBABILITY_MODEL_FILE_NAME)).unwrap();
+            fst::Map::new(bytes).unwrap()
+        }
+
+        #[test]
+        fn test_augmenting_equals_training_on_combined_text() {
+            let augmented_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, augmented_directory.path());
+            let new_input_file = create_temp_input_file(NEW_TEXT);
+            let result = LanguageModelFilesWriter::augment_and_write_language_model_files(
+                new_input_file.path(),
+                augmented_directory.path(),
+                Language::English,
+                "\\p{L}",
+                1.0,
+                1,
+            );
+            assert!(result.is_ok());
+
+            let combined_directory = tempdir().unwrap();
+            write_model(&format!("{ORIGINAL_TEXT}{NEW_TEXT}"), combined_directory.path());
+
+            assert_eq!(
+                read_model(augmented_directory.path()).as_fst().as_bytes(),
+                read_model(combined_directory.path()).as_fst().as_bytes()
+            );
+        }
+
+        #[test]
+        fn test_augmenting_skips_rare_new_ngrams() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            let new_input_file = create_temp_input_file(NEW_TEXT);
+            LanguageModelFilesWriter::augment_and_write_language_model_files(
+                new_input_file.path(),
+                output_directory.path(),
+                Language::English,
+                "\\p{L}",
+                2.0,
+                2,
+            )
+            .unwrap();
+
+            let model = read_model(output_directory.path());
+            // Seen once in the new text only, so it stays out of the model.
+            assert!(model.get("quizz").is_none());
+            // Seen in the original text, so it is kept and re-estimated.
+            assert!(model.get("sente").is_some());
         }
     }
 
