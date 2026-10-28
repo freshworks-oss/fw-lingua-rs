@@ -696,7 +696,9 @@ impl LanguageDetector {
             return values;
         }
 
-        let ngram_length_range = if character_count >= 120 || self.is_low_accuracy_mode_enabled {
+        // Texts this long are scored on trigrams only, for speed. Below 300 letters,
+        // trigrams alone let a few names or codes outweigh the rest of the text.
+        let ngram_length_range = if character_count >= 300 || self.is_low_accuracy_mode_enabled {
             3..4usize
         } else {
             1..6usize
