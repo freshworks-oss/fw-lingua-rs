@@ -628,8 +628,8 @@ LanguageDetectorBuilder::from_all_languages().with_low_accuracy_mode().build();
 ```
 
 The downside of this approach is that detection accuracy for short texts consisting
-of less than 120 characters will drop significantly. However, detection accuracy for
-texts which are longer than 120 characters will remain mostly unaffected.
+of less than 300 characters will drop significantly. However, detection accuracy for
+texts which are longer than 300 characters will remain mostly unaffected.
 
 An alternative for a faster performance is to reduce the set
 of languages when building the language detector. In most cases, it is not advisable to
