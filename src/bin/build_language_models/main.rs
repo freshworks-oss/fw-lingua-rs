@@ -62,10 +62,12 @@ fn main() {
         "augment" => {
             // Optional args: weight of the new corpus' counts, and the minimum count
             // an ngram absent from the existing model needs in the new corpus.
-            let weight = args.next().map_or(1.0, |w| w.parse().expect("weight must be a number"));
-            let min_new_ngram_count = args
+            let weight = args
                 .next()
-                .map_or(5, |c| c.parse().expect("min_new_ngram_count must be an integer"));
+                .map_or(1.0, |w| w.parse().expect("weight must be a number"));
+            let min_new_ngram_count = args.next().map_or(5, |c| {
+                c.parse().expect("min_new_ngram_count must be an integer")
+            });
             println!(
                 "Augmenting language model for {code} in {} (weight={weight}, min_new_ngram_count={min_new_ngram_count})",
                 models_dir.display()

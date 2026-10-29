@@ -149,6 +149,7 @@ impl LanguageModelFilesWriter {
     ///
     /// Ngrams that only occur in the new corpus are added only if they occur there at
     /// least `min_new_ngram_count` times, to keep typos and noise out of the model.
+    /// With a `weight` of 0, the model is rewritten unchanged.
     pub fn augment_and_write_language_model_files(
         input_file_path: &Path,
         output_directory_path: &Path,
@@ -199,10 +200,11 @@ impl LanguageModelFilesWriter {
                 &lower_ngram_absolute_frequencies,
             )?;
             for (ngram, frequency) in model.absolute_frequencies.iter() {
+                // With weight 0, a new ngram would get a count of 0 and an infinite
+                // log probability, so only known ngrams are re-estimated.
                 let is_known = counts.contains_key(&ngram.value);
-                if is_known || *frequency >= min_new_ngram_count {
-                    *counts.entry(ngram.value.clone()).or_insert(0.0) +=
-                        weight * *frequency as f64;
+                if is_known || (weight > 0.0 && *frequency >= min_new_ngram_count) {
+                    *counts.entry(ngram.value.clone()).or_insert(0.0) += weight * *frequency as f64;
                 }
             }
             lower_ngram_absolute_frequencies = model.absolute_frequencies;
@@ -223,7 +225,10 @@ impl LanguageModelFilesWriter {
                 let prefix = ngram.chars().take(length - 1).collect::<String>();
                 counts[&prefix]
             };
-            kvs.push((ngram.as_bytes().to_vec(), (count / denominator).ln().to_bits()));
+            kvs.push((
+                ngram.as_bytes().to_vec(),
+                (count / denominator).ln().to_bits(),
+            ));
         }
 
         let fst_map = create_fst_map(kvs);
@@ -1018,8 +1023,10 @@ mod tests {
             );
         }
 
-        const ORIGINAL_TEXT: &str = "these sentences are the original text\nand this is another one\n";
-        const NEW_TEXT: &str = "some newer sentences extend the text\nquizzical words appear here\n";
+        const ORIGINAL_TEXT: &str =
+            "these sentences are the original text\nand this is another one\n";
+        const NEW_TEXT: &str =
+            "some newer sentences extend the text\nquizzical words appear here\n";
 
         fn write_model(text: &str, output_directory: &Path) {
             let input_file = create_temp_input_file(text);
@@ -1053,11 +1060,39 @@ mod tests {
             assert!(result.is_ok());
 
             let combined_directory = tempdir().unwrap();
-            write_model(&format!("{ORIGINAL_TEXT}{NEW_TEXT}"), combined_directory.path());
+            write_model(
+                &format!("{ORIGINAL_TEXT}{NEW_TEXT}"),
+                combined_directory.path(),
+            );
 
             assert_eq!(
                 read_model(augmented_directory.path()).as_fst().as_bytes(),
                 read_model(combined_directory.path()).as_fst().as_bytes()
+            );
+        }
+
+        #[test]
+        fn test_augmenting_with_weight_zero_keeps_model_unchanged() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            let original_bytes = read_model(output_directory.path())
+                .as_fst()
+                .as_bytes()
+                .to_vec();
+            let new_input_file = create_temp_input_file(NEW_TEXT);
+            LanguageModelFilesWriter::augment_and_write_language_model_files(
+                new_input_file.path(),
+                output_directory.path(),
+                Language::English,
+                "\\p{L}",
+                0.0,
+                1,
+            )
+            .unwrap();
+
+            assert_eq!(
+                read_model(output_directory.path()).as_fst().as_bytes(),
+                original_bytes.as_slice()
             );
         }
 
