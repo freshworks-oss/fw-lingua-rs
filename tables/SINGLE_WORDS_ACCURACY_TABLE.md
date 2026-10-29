@@ -342,7 +342,7 @@
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/grey.png"> -</td>
     </tr>
         <td>Malay</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/red.png"> 9</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/red.png"> 6</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/red.png"> 11</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/red.png"> 12</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/green.png"> 90</td>

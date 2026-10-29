@@ -1,16 +1,16 @@
 ##### German #####
 
->>> Accuracy on average: 63.23%
+>>> Accuracy on average: 64.23%
 
 >> Detection of 1000 single words (average length: 9 chars)
-Accuracy: 85.20%
-Erroneously classified as Malay: 14.80%
+Accuracy: 85.60%
+Erroneously classified as Malay: 14.40%
 
 >> Detection of 1000 word pairs (average length: 18 chars)
-Accuracy: 73.70%
-Erroneously classified as Malay: 26.30%
+Accuracy: 74.50%
+Erroneously classified as Malay: 25.50%
 
 >> Detection of 1000 sentences (average length: 111 chars)
-Accuracy: 30.80%
-Erroneously classified as Malay: 69.20%
+Accuracy: 32.60%
+Erroneously classified as Malay: 67.40%
 

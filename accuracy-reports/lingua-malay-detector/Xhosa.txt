@@ -1,16 +1,16 @@
 ##### Xhosa #####
 
->>> Accuracy on average: 55.07%
+>>> Accuracy on average: 49.77%
 
 >> Detection of 1000 single words (average length: 9 chars)
-Accuracy: 81.20%
-Erroneously classified as Malay: 18.80%
+Accuracy: 78.20%
+Erroneously classified as Malay: 21.80%
 
 >> Detection of 1000 word pairs (average length: 18 chars)
-Accuracy: 67.80%
-Erroneously classified as Malay: 32.20%
+Accuracy: 60.50%
+Erroneously classified as Malay: 39.50%
 
 >> Detection of 1000 sentences (average length: 127 chars)
-Accuracy: 16.20%
-Erroneously classified as Malay: 83.80%
+Accuracy: 10.60%
+Erroneously classified as Malay: 89.40%
 

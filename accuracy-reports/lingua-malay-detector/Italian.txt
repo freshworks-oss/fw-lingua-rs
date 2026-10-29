@@ -1,16 +1,16 @@
 ##### Italian #####
 
->>> Accuracy on average: 58.03%
+>>> Accuracy on average: 59.57%
 
 >> Detection of 1000 single words (average length: 8 chars)
-Accuracy: 83.10%
-Erroneously classified as Malay: 16.90%
+Accuracy: 83.60%
+Erroneously classified as Malay: 16.40%
 
 >> Detection of 1000 word pairs (average length: 16 chars)
-Accuracy: 72.80%
-Erroneously classified as Malay: 27.20%
+Accuracy: 73.80%
+Erroneously classified as Malay: 26.20%
 
 >> Detection of 1000 sentences (average length: 123 chars)
-Accuracy: 18.20%
-Erroneously classified as Malay: 81.80%
+Accuracy: 21.30%
+Erroneously classified as Malay: 78.70%
 
