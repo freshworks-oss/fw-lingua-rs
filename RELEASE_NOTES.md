@@ -1,3 +1,31 @@
+## Lingua 1.10.2 (not yet released)
+
+### Improvements
+
+- The Indonesian and Malay models are retrained with colloquial text, so chat
+  and social media Indonesian is no longer reported as Malay. For example,
+  `Ribet udah insert nggak dikeluarin ngurus ini susah nih susah ribet udah`
+  was Malay with 0.68 and is now Indonesian. Held-out colloquial Indonesian
+  tweets go from 81.3% to 91.2% accuracy and Malaysian tweets from 62.8% to
+  78.6%. On the formal Malay test data, word pairs go from 67.2% to 64.4% and
+  single words from 13.3% to 12.4%.
+
+- `build_language_models` has a new `augment` mode, which adds weighted counts
+  from a new corpus to an existing model, and a new `unique-update` mode,
+  which updates `unique-ngrams.fst` for the augmented languages only.
+
+### Bug Fixes
+
+- In high accuracy mode, texts of 120 to 300 letters were scored on trigrams
+  only, so a repeated Dutch sentence containing `GOS` came out as Spanish.
+  Texts under 300 letters are now scored on all ngram lengths. This makes
+  texts of 120 to 300 letters about 3 times slower (about 2 to 3 ms).
+
+- The Malay test data was mostly Indonesian, so Malay accuracy was measured
+  as 28% for sentences and got worse with every Indonesian improvement. It is
+  replaced with Malaysian Malay text from the Leipzig corpora, and the
+  accuracy reports are regenerated.
+
 ## Lingua 1.10.1 (not yet released)
 
 ### Bug Fixes
