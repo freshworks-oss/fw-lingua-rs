@@ -154,6 +154,9 @@ impl TrainingDataLanguageModel {
 
         for line in text.iter() {
             let chars = line.to_lowercase().chars().collect_vec();
+            if chars.len() < ngram_length {
+                continue;
+            }
 
             for i in 0..=chars.len() - ngram_length {
                 let slice = &chars[i..i + ngram_length].iter().collect::<String>();
@@ -188,7 +191,7 @@ impl TrainingDataLanguageModel {
                     .unwrap()
             };
             let key = ngram.value.as_bytes().to_vec();
-            let value = (*frequency as f64 / denominator as f64).ln().to_bits();
+            let value = encode_probability(*frequency as f64, denominator as f64);
             fst_data.push((key, value));
         }
 
@@ -197,6 +200,11 @@ impl TrainingDataLanguageModel {
             ngrams: create_fst_map(fst_data),
         }
     }
+}
+
+/// Encodes the probability `frequency / denominator` as stored in `ngrams.fst`.
+pub(crate) fn encode_probability(frequency: f64, denominator: f64) -> u64 {
+    (frequency / denominator).ln().to_bits()
 }
 
 pub(crate) fn create_ngrams(words: &[String], ngram_length: usize) -> HashSet<NgramRef<'_>> {
@@ -569,6 +577,19 @@ mod tests {
 
             assert_eq!(model.absolute_frequencies, expected_absolute_frequencies);
             assert_eq!(model.ngram_probability_model, expected_probability_model);
+        }
+
+        #[test]
+        fn test_lines_shorter_than_ngram_length_are_skipped() {
+            let model = TrainingDataLanguageModel::from_text(
+                &["ok", "wkwk", "hello"],
+                &Language::English,
+                5,
+                "\\p{L}",
+                &hashmap!(Ngram::new("hell") => 1),
+            );
+
+            assert_eq!(model.absolute_frequencies, hashmap!(Ngram::new("hello") => 1));
         }
     }
 
