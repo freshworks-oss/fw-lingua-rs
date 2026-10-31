@@ -1,16 +1,16 @@
 ##### Malay #####
 
->>> Accuracy on average: 58.23%
+>>> Accuracy on average: 56.30%
 
 >> Detection of 1000 single words (average length: 7 chars)
-Accuracy: 85.30%
-Erroneously classified as Somali: 14.70%
+Accuracy: 89.20%
+Erroneously classified as Somali: 10.80%
 
 >> Detection of 1000 word pairs (average length: 15 chars)
-Accuracy: 74.00%
-Erroneously classified as Somali: 26.00%
+Accuracy: 71.80%
+Erroneously classified as Somali: 28.20%
 
 >> Detection of 1000 sentences (average length: 116 chars)
-Accuracy: 15.40%
-Erroneously classified as Somali: 84.60%
+Accuracy: 7.90%
+Erroneously classified as Somali: 92.10%
 

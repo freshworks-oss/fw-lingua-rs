@@ -1,14 +1,14 @@
 ##### Ganda #####
 
->>> Accuracy on average: 47.53%
+>>> Accuracy on average: 46.57%
 
 >> Detection of 1000 single words (average length: 9 chars)
-Accuracy: 78.90%
-Erroneously classified as Malay: 21.10%
+Accuracy: 78.00%
+Erroneously classified as Malay: 22.00%
 
 >> Detection of 1000 word pairs (average length: 17 chars)
-Accuracy: 56.20%
-Erroneously classified as Malay: 43.80%
+Accuracy: 54.20%
+Erroneously classified as Malay: 45.80%
 
 >> Detection of 1000 sentences (average length: 125 chars)
 Accuracy: 7.50%

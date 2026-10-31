@@ -25,8 +25,8 @@ use crate::detector::split_text_into_words;
 use crate::file::read_test_data_file;
 use crate::model::{
     NGRAM_PROBABILITY_MODEL_FILE_NAME, NgramCountModel, NgramCountModelType,
-    TrainingDataLanguageModel, create_fst_map, create_fst_set, get_utf8_slice,
-    load_ngram_probability_model,
+    TrainingDataLanguageModel, create_fst_map, create_fst_set, encode_probability, get_utf8_slice,
+    load_ngram_count_model, load_ngram_probability_model,
 };
 use crate::ngram::Ngram;
 use counter::Counter;
@@ -39,6 +39,11 @@ pub(crate) const LANGUAGES_MESSAGE: &str = "Set of languages must not be empty";
 
 pub(crate) const MOST_COMMON_NGRAMS_MESSAGE: &str =
     "Amount of most common ngrams must be greater than zero";
+
+pub(crate) const AUGMENT_WEIGHT_MESSAGE: &str = "Weight must be a finite number of at least 0";
+
+pub(crate) const AUGMENT_MIN_NEW_NGRAM_COUNT_MESSAGE: &str =
+    "Weight times min_new_ngram_count must be at least 1";
 
 /// This struct creates language model files and writes them to a directory.
 #[cfg_attr(feature = "python", pyo3::prelude::pyclass(module = "lingua"))]
@@ -87,40 +92,43 @@ impl LanguageModelFilesWriter {
         check_input_file_path(input_file_path);
         check_output_directory_path(output_directory_path);
 
+        let lines = read_training_lines(input_file_path)?;
+        let lines = lines.iter().map(|line| line.as_str()).collect_vec();
+
         let unigram_model =
-            Self::create_language_model(input_file_path, &language, 1, char_class, &hashmap!())?;
+            Self::create_language_model(&lines, &language, 1, char_class, &hashmap!());
 
         let bigram_model = Self::create_language_model(
-            input_file_path,
+            &lines,
             &language,
             2,
             char_class,
             &unigram_model.absolute_frequencies,
-        )?;
+        );
 
         let trigram_model = Self::create_language_model(
-            input_file_path,
+            &lines,
             &language,
             3,
             char_class,
             &bigram_model.absolute_frequencies,
-        )?;
+        );
 
         let quadrigram_model = Self::create_language_model(
-            input_file_path,
+            &lines,
             &language,
             4,
             char_class,
             &trigram_model.absolute_frequencies,
-        )?;
+        );
 
         let fivegram_model = Self::create_language_model(
-            input_file_path,
+            &lines,
             &language,
             5,
             char_class,
             &quadrigram_model.absolute_frequencies,
-        )?;
+        );
 
         Self::write_language_models(
             &[
@@ -137,29 +145,162 @@ impl LanguageModelFilesWriter {
         Ok(())
     }
 
-    fn create_language_model(
+    /// Retrains an existing language model by adding the ngram counts of a new corpus
+    /// to the counts of the corpus the model was originally built from.
+    ///
+    /// The original absolute counts are reconstructed from `ngrams.fst` in
+    /// `output_directory_path`: every probability is stored as `ln(c(ngram) / c(prefix))`,
+    /// so the counts are recoverable up to a global scale, which is chosen such that
+    /// the rarest ngram has a count of 1. The new counts are multiplied by `weight`,
+    /// added, and all probabilities are recomputed, so ngrams already in the model are
+    /// re-estimated rather than kept as they were.
+    ///
+    /// Ngrams that only occur in the new corpus are added only if they occur there at
+    /// least `min_new_ngram_count` times, to keep typos and noise out of the model.
+    /// With a `weight` of 0, the model is rewritten unchanged.
+    ///
+    /// A model can only be augmented if its reconstructed counts are whole numbers. That
+    /// holds for a model built from text, or augmented with a whole-number `weight`. A model
+    /// augmented with a fractional `weight` can't be augmented again, and an error is
+    /// returned instead of guessing its scale.
+    ///
+    /// Only `ngrams.fst` is rewritten. `unique-ngrams.fst` of this and every other language
+    /// must be updated afterwards with
+    /// [`UniqueNgramsWriter::update_unique_ngram_files`].
+    ///
+    /// ⚠ Panics if:
+    /// - the input file path is not absolute or does not point to an existing txt file
+    /// - the input file's encoding is not UTF-8
+    /// - the output directory path is not absolute or does not point to an existing directory
+    /// - the character class cannot be compiled to a valid regular expression
+    /// - `weight` is negative or not finite
+    /// - `weight` is greater than 0 and `weight * min_new_ngram_count` is less than 1,
+    ///   which would give new ngrams a count below that of the rarest ngram
+    pub fn augment_and_write_language_model_files(
         input_file_path: &Path,
+        output_directory_path: &Path,
+        language: Language,
+        char_class: &str,
+        weight: f64,
+        min_new_ngram_count: u32,
+    ) -> io::Result<()> {
+        check_input_file_path(input_file_path);
+        check_output_directory_path(output_directory_path);
+        if !weight.is_finite() || weight < 0.0 {
+            panic!("{AUGMENT_WEIGHT_MESSAGE}");
+        }
+        if weight > 0.0 && weight * (min_new_ngram_count.max(1) as f64) < 1.0 {
+            panic!("{AUGMENT_MIN_NEW_NGRAM_COUNT_MESSAGE}");
+        }
+
+        let model_file_path = output_directory_path.join(NGRAM_PROBABILITY_MODEL_FILE_NAME);
+        let mut counts = Self::reconstruct_absolute_frequencies(&model_file_path)?;
+
+        let lines = read_training_lines(input_file_path)?;
+        let lines = lines.iter().map(|line| line.as_str()).collect_vec();
+        let mut lower_ngram_absolute_frequencies = hashmap!();
+        for ngram_length in 1..=5 {
+            let model = Self::create_language_model(
+                &lines,
+                &language,
+                ngram_length,
+                char_class,
+                &lower_ngram_absolute_frequencies,
+            );
+            for (ngram, frequency) in model.absolute_frequencies.iter() {
+                // With weight 0, a new ngram would get a count of 0 and an infinite
+                // log probability, so only known ngrams are re-estimated.
+                let is_known = counts.contains_key(&ngram.value);
+                if is_known || (weight > 0.0 && *frequency >= min_new_ngram_count) {
+                    *counts.entry(ngram.value.clone()).or_insert(0.0) += weight * *frequency as f64;
+                }
+            }
+            lower_ngram_absolute_frequencies = model.absolute_frequencies;
+        }
+
+        let unigram_total = counts
+            .iter()
+            .filter(|(ngram, _)| ngram.chars().count() == 1)
+            .map(|(_, count)| count)
+            .sum::<f64>();
+
+        let mut kvs = vec![];
+        for (ngram, count) in counts.iter() {
+            let denominator = match prefix(ngram) {
+                Some(prefix) => counts[prefix],
+                None => unigram_total,
+            };
+            kvs.push((
+                ngram.as_bytes().to_vec(),
+                encode_probability(*count, denominator),
+            ));
+        }
+
+        let fst_map = create_fst_map(kvs);
+        // Write next to the model and rename, so that an interrupted run
+        // doesn't leave a truncated model behind.
+        let temporary_file_path = model_file_path.with_extension("fst.tmp");
+        fs::write(&temporary_file_path, fst_map.as_fst().as_bytes())?;
+        fs::rename(temporary_file_path, model_file_path)?;
+
+        Ok(())
+    }
+
+    fn reconstruct_absolute_frequencies(
+        model_file_path: &Path,
+    ) -> io::Result<HashMap<String, f64>> {
+        let model = fst::Map::new(fs::read(model_file_path)?).unwrap();
+
+        let mut ngrams_by_length: Vec<Vec<(String, f64)>> = vec![vec![]; 6];
+        let mut stream = model.stream();
+        while let Some((key, value)) = stream.next() {
+            let ngram = String::from_utf8(key.to_vec()).unwrap();
+            let length = ngram.chars().count();
+            ngrams_by_length[length].push((ngram, f64::from_bits(value)));
+        }
+
+        // Shorter ngrams first, so that every prefix count is known when it is needed.
+        let mut counts: HashMap<String, f64> = HashMap::new();
+        for (ngram, log_probability) in ngrams_by_length.into_iter().flatten() {
+            let denominator = prefix(&ngram).map_or(1.0, |prefix| counts[prefix]);
+            counts.insert(ngram, log_probability.exp() * denominator);
+        }
+
+        let scale = counts.values().cloned().fold(f64::MAX, f64::min);
+        for (ngram, count) in counts.iter_mut() {
+            let scaled = *count / scale;
+            let rounded = scaled.round();
+            if (scaled - rounded).abs() > 1e-6 * rounded {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!(
+                        "'{}' does not have whole-number counts (ngram '{ngram}' has {scaled}), \
+                         so its counts can't be reconstructed. Was it augmented with a \
+                         fractional weight?",
+                        model_file_path.display()
+                    ),
+                ));
+            }
+            *count = rounded;
+        }
+
+        Ok(counts)
+    }
+
+    fn create_language_model(
+        lines: &[&str],
         language: &Language,
         ngram_length: usize,
         char_class: &str,
         lower_ngram_absolute_frequencies: &HashMap<Ngram, u32>,
-    ) -> io::Result<TrainingDataLanguageModel> {
-        let file = fs::File::open(input_file_path)?;
-        let reader = BufReader::new(file);
-        let lines = reader
-            .lines()
-            .map(|line| line.unwrap())
-            .filter(|line| !line.trim().is_empty())
-            .collect_vec();
-        let lines_as_str = lines.iter().map(|line| line.as_str()).collect_vec();
-
-        Ok(TrainingDataLanguageModel::from_text(
-            &lines_as_str,
+    ) -> TrainingDataLanguageModel {
+        TrainingDataLanguageModel::from_text(
+            lines,
             language,
             ngram_length,
             char_class,
             lower_ngram_absolute_frequencies,
-        ))
+        )
     }
 
     fn write_language_models(
@@ -383,6 +524,98 @@ impl UniqueNgramsWriter {
         Ok(())
     }
 
+    /// Updates the unique ngram files after some language models were augmented, and writes
+    /// the files that changed to a directory.
+    ///
+    /// Unlike [`Self::create_and_write_unique_ngram_files`], this doesn't regenerate the files
+    /// from scratch, so it only makes the changes that the augmented models cause. An augmented
+    /// model keeps all of its previous ngrams, so it can only gain ngrams. Each gained ngram is
+    /// removed from the unique ngrams of every other language, and added to the unique ngrams
+    /// of the augmented language if no other model contains it.
+    ///
+    /// Pass all augmented languages in one call: the current unique ngrams are read from the
+    /// files compiled into this crate.
+    ///
+    /// `output_directory_path`: The path to an existing directory where the changed unique
+    /// ngram files are to be written.
+    ///
+    /// `previous_model_file_paths`: For each augmented language, the path to its `ngrams.fst`
+    /// from before it was augmented.
+    ///
+    /// ⚠ Panics if the output directory path is not absolute or does not point to an existing directory.
+    pub fn update_unique_ngram_files(
+        output_directory_path: &Path,
+        previous_model_file_paths: &HashMap<Language, &Path>,
+    ) -> io::Result<()> {
+        check_output_directory_path(output_directory_path);
+        let ngrams = Self::load_ngrams();
+
+        let mut previous_unique_ngrams = HashMap::new();
+        for language in ngrams.keys() {
+            if let Some(model) = load_ngram_count_model(*language, NgramCountModelType::Unique) {
+                let unique_ngrams = model.ngrams.stream().into_bytes().into_iter().collect();
+                previous_unique_ngrams.insert(*language, unique_ngrams);
+            }
+        }
+
+        let mut gained_ngrams = HashMap::new();
+        for (language, previous_model_file_path) in previous_model_file_paths {
+            let previous_model = fst::Map::new(fs::read(previous_model_file_path)?).unwrap();
+            let gained: HashSet<Vec<u8>> = ngrams[language]
+                .iter()
+                .filter(|ngram| !previous_model.contains_key(ngram))
+                .cloned()
+                .collect();
+            gained_ngrams.insert(*language, gained);
+        }
+
+        let updated_unique_ngrams =
+            Self::identify_updated_unique_ngrams(&ngrams, &previous_unique_ngrams, &gained_ngrams);
+        Self::store_unique_ngrams(updated_unique_ngrams, output_directory_path)?;
+        Ok(())
+    }
+
+    fn identify_updated_unique_ngrams(
+        ngrams: &HashMap<Language, HashSet<Vec<u8>>>,
+        previous_unique_ngrams: &HashMap<Language, HashSet<Vec<u8>>>,
+        gained_ngrams: &HashMap<Language, HashSet<Vec<u8>>>,
+    ) -> Vec<NgramCountModel> {
+        let no_ngrams = HashSet::new();
+        let mut updated_unique_ngrams = vec![];
+
+        for language in ngrams.keys().sorted() {
+            let previous = previous_unique_ngrams.get(language).unwrap_or(&no_ngrams);
+            let is_gained_by_other_language = |ngram: &Vec<u8>| {
+                gained_ngrams
+                    .iter()
+                    .any(|(other, gained)| other != language && gained.contains(ngram))
+            };
+            let mut unique_ngrams: HashSet<Vec<u8>> = previous
+                .iter()
+                .filter(|ngram| !is_gained_by_other_language(ngram))
+                .cloned()
+                .collect();
+
+            for ngram in gained_ngrams.get(language).unwrap_or(&no_ngrams) {
+                let is_in_other_model = ngrams
+                    .iter()
+                    .any(|(other, ngrams)| other != language && ngrams.contains(ngram));
+                if !is_in_other_model {
+                    unique_ngrams.insert(ngram.clone());
+                }
+            }
+
+            if &unique_ngrams != previous {
+                updated_unique_ngrams.push(NgramCountModel {
+                    language: *language,
+                    ngrams: create_fst_set(unique_ngrams.into_iter().collect_vec()),
+                });
+            }
+        }
+
+        updated_unique_ngrams
+    }
+
     fn load_ngrams() -> HashMap<Language, HashSet<Vec<u8>>> {
         let mut result = HashMap::new();
         for language in Language::iter() {
@@ -543,6 +776,23 @@ fn store_ngram_count_models(
         file.write_all(model.ngrams.into_fst().as_bytes())?;
     }
     Ok(())
+}
+
+fn read_training_lines(input_file_path: &Path) -> io::Result<Vec<String>> {
+    let file = fs::File::open(input_file_path)?;
+    let reader = BufReader::new(file);
+    let lines = reader
+        .lines()
+        .map(|line| line.unwrap())
+        .filter(|line| !line.trim().is_empty())
+        .collect_vec();
+    Ok(lines)
+}
+
+/// The ngram without its last character, or `None` for a unigram.
+fn prefix(ngram: &str) -> Option<&str> {
+    let length = ngram.chars().count();
+    (length > 1).then(|| get_utf8_slice(ngram, 0, length - 1))
 }
 
 fn check_input_file_path(input_file_path: &Path) {
@@ -922,6 +1172,180 @@ mod tests {
                 high_accuracy_model,
             );
         }
+
+        const ORIGINAL_TEXT: &str =
+            "these sentences are the original text\nand this is another one\n";
+        const NEW_TEXT: &str =
+            "some newer sentences extend the text\nquizzical words appear here\n";
+
+        fn write_model(text: &str, output_directory: &Path) {
+            let input_file = create_temp_input_file(text);
+            LanguageModelFilesWriter::create_and_write_language_model_files(
+                input_file.path(),
+                output_directory,
+                Language::English,
+                "\\p{L}",
+            )
+            .unwrap();
+        }
+
+        fn read_model(output_directory: &Path) -> fst::Map<Vec<u8>> {
+            let bytes = fs::read(output_directory.join(NGRAM_PROBABILITY_MODEL_FILE_NAME)).unwrap();
+            fst::Map::new(bytes).unwrap()
+        }
+
+        #[test]
+        fn test_augmenting_equals_training_on_combined_text() {
+            let augmented_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, augmented_directory.path());
+            let new_input_file = create_temp_input_file(NEW_TEXT);
+            let result = LanguageModelFilesWriter::augment_and_write_language_model_files(
+                new_input_file.path(),
+                augmented_directory.path(),
+                Language::English,
+                "\\p{L}",
+                1.0,
+                1,
+            );
+            assert!(result.is_ok());
+
+            let combined_directory = tempdir().unwrap();
+            write_model(
+                &format!("{ORIGINAL_TEXT}{NEW_TEXT}"),
+                combined_directory.path(),
+            );
+
+            assert_eq!(
+                read_model(augmented_directory.path()).as_fst().as_bytes(),
+                read_model(combined_directory.path()).as_fst().as_bytes()
+            );
+        }
+
+        #[test]
+        fn test_augmenting_with_weight_zero_keeps_model_unchanged() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            let original_bytes = read_model(output_directory.path())
+                .as_fst()
+                .as_bytes()
+                .to_vec();
+            let new_input_file = create_temp_input_file(NEW_TEXT);
+            LanguageModelFilesWriter::augment_and_write_language_model_files(
+                new_input_file.path(),
+                output_directory.path(),
+                Language::English,
+                "\\p{L}",
+                0.0,
+                1,
+            )
+            .unwrap();
+
+            assert_eq!(
+                read_model(output_directory.path()).as_fst().as_bytes(),
+                original_bytes.as_slice()
+            );
+        }
+
+        #[test]
+        fn test_augmenting_skips_rare_new_ngrams() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            let new_input_file = create_temp_input_file(NEW_TEXT);
+            LanguageModelFilesWriter::augment_and_write_language_model_files(
+                new_input_file.path(),
+                output_directory.path(),
+                Language::English,
+                "\\p{L}",
+                2.0,
+                2,
+            )
+            .unwrap();
+
+            let model = read_model(output_directory.path());
+            // Seen once in the new text only, so it stays out of the model.
+            assert!(model.get("quizz").is_none());
+            // Seen in the original text, so it is kept and re-estimated.
+            assert!(model.get("sente").is_some());
+        }
+
+        fn augment(
+            text: &str,
+            output_directory: &Path,
+            weight: f64,
+            min_new_ngram_count: u32,
+        ) -> io::Result<()> {
+            let input_file = create_temp_input_file(text);
+            LanguageModelFilesWriter::augment_and_write_language_model_files(
+                input_file.path(),
+                output_directory,
+                Language::English,
+                "\\p{L}",
+                weight,
+                min_new_ngram_count,
+            )
+        }
+
+        #[test]
+        fn test_augmenting_twice_equals_training_on_combined_text() {
+            let augmented_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, augmented_directory.path());
+            augment(NEW_TEXT, augmented_directory.path(), 2.0, 1).unwrap();
+            augment(NEW_TEXT, augmented_directory.path(), 1.0, 1).unwrap();
+
+            let combined_directory = tempdir().unwrap();
+            write_model(
+                &format!("{ORIGINAL_TEXT}{NEW_TEXT}{NEW_TEXT}{NEW_TEXT}"),
+                combined_directory.path(),
+            );
+
+            assert_eq!(
+                read_model(augmented_directory.path()).as_fst().as_bytes(),
+                read_model(combined_directory.path()).as_fst().as_bytes()
+            );
+        }
+
+        #[test]
+        fn test_augmenting_a_model_augmented_with_a_fractional_weight_fails() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            augment(NEW_TEXT, output_directory.path(), 0.5, 2).unwrap();
+            let augmented_bytes = read_model(output_directory.path())
+                .as_fst()
+                .as_bytes()
+                .to_vec();
+
+            let error = augment(NEW_TEXT, output_directory.path(), 1.0, 2).unwrap_err();
+
+            assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+            assert_eq!(
+                read_model(output_directory.path()).as_fst().as_bytes(),
+                augmented_bytes.as_slice()
+            );
+        }
+
+        #[test]
+        fn test_lines_shorter_than_ngram_length_do_not_fail_augmenting() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+
+            assert!(augment("ok\nwkwk\n", output_directory.path(), 1.0, 1).is_ok());
+        }
+
+        #[rstest(weight, case(-1.0), case(f64::NAN), case(f64::INFINITY))]
+        #[should_panic(expected = "Weight must be a finite number of at least 0")]
+        fn test_augmenting_with_invalid_weight_panics(weight: f64) {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            let _ = augment(NEW_TEXT, output_directory.path(), weight, 2);
+        }
+
+        #[test]
+        #[should_panic(expected = "Weight times min_new_ngram_count must be at least 1")]
+        fn test_augmenting_with_too_small_weight_panics() {
+            let output_directory = tempdir().unwrap();
+            write_model(ORIGINAL_TEXT, output_directory.path());
+            let _ = augment(NEW_TEXT, output_directory.path(), 0.25, 2);
+        }
     }
 
     mod test_data_files {
@@ -1092,6 +1516,91 @@ mod tests {
             );
             let actual_unique_ngrams = UniqueNgramsWriter::identify_unique_ngrams(ngrams);
             assert_eq!(actual_unique_ngrams, expected_unique_ngrams);
+        }
+
+        #[test]
+        fn test_identify_updated_unique_ngrams() {
+            // English gained "ab" (in no other model) and "rz" (also German).
+            // Spanish gained "es", which English listed as unique.
+            let ngrams = hashmap!(
+                English => bytes_set(hashset!("th", "es", "ab", "rz")),
+                German => bytes_set(hashset!("äu", "rz")),
+                Spanish => bytes_set(hashset!("es", "ñ"))
+            );
+            let previous_unique_ngrams = hashmap!(
+                English => bytes_set(hashset!("th", "es")),
+                German => bytes_set(hashset!("äu", "rz"))
+            );
+            let gained_ngrams = hashmap!(
+                English => bytes_set(hashset!("ab", "rz")),
+                Spanish => bytes_set(hashset!("es"))
+            );
+
+            let actual_unique_ngrams = UniqueNgramsWriter::identify_updated_unique_ngrams(
+                &ngrams,
+                &previous_unique_ngrams,
+                &gained_ngrams,
+            );
+
+            // German loses "rz" to English. Spanish has no unique ngrams file yet,
+            // and "es" is in the English model, so it doesn't get one.
+            assert_eq!(
+                actual_unique_ngrams,
+                vec![
+                    NgramCountModel {
+                        language: English,
+                        ngrams: count_model_fst(hashset!("th", "ab")),
+                    },
+                    NgramCountModel {
+                        language: German,
+                        ngrams: count_model_fst(hashset!("äu")),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_identify_updated_unique_ngrams_without_gained_ngrams_changes_nothing() {
+            let ngrams = hashmap!(
+                English => bytes_set(hashset!("th", "en")),
+                German => bytes_set(hashset!("äu", "en", "th"))
+            );
+            // "th" is in both models, so a full regeneration would drop it.
+            // Without gained ngrams, the existing unique ngrams are kept as they are.
+            let previous_unique_ngrams = hashmap!(English => bytes_set(hashset!("th")));
+
+            let actual_unique_ngrams = UniqueNgramsWriter::identify_updated_unique_ngrams(
+                &ngrams,
+                &previous_unique_ngrams,
+                &hashmap!(English => HashSet::new()),
+            );
+
+            assert!(actual_unique_ngrams.is_empty());
+        }
+
+        #[test]
+        fn test_update_unique_ngram_files_with_unchanged_model_writes_nothing() {
+            let output_directory = tempdir().expect("Temporary directory could not be created");
+            let english_model_file_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("language-models/en/models")
+                .join(NGRAM_PROBABILITY_MODEL_FILE_NAME);
+            let result = UniqueNgramsWriter::update_unique_ngram_files(
+                output_directory.path(),
+                &hashmap!(English => english_model_file_path.as_path()),
+            );
+            assert!(result.is_ok());
+            assert!(read_directory_content(output_directory.path()).is_empty());
+        }
+
+        #[test]
+        #[cfg_attr(target_os = "windows", ignore)]
+        #[should_panic(expected = "Output directory path 'some/relative/path' is not absolute")]
+        fn test_update_unique_ngram_files_with_relative_output_directory_path() {
+            let relative_output_directory_path = PathBuf::from("some/relative/path");
+            let _ = UniqueNgramsWriter::update_unique_ngram_files(
+                relative_output_directory_path.as_path(),
+                &hashmap!(),
+            );
         }
     }
 

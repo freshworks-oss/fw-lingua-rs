@@ -143,7 +143,7 @@
     </tr>
         <td>Dutch</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/yellow.png"> 42</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 62</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 63</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/green.png"> 81</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/green.png"> 83</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/orange.png"> 37</td>
@@ -263,8 +263,8 @@
     </tr>
         <td>Indonesian</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 63</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/yellow.png"> 46</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 61</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/yellow.png"> 47</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 62</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/green.png"> 82</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 69</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/grey.png"> -</td>
@@ -342,9 +342,9 @@
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/grey.png"> -</td>
     </tr>
         <td>Malay</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/orange.png"> 22</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/orange.png"> 36</td>
-        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/orange.png"> 38</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/yellow.png"> 44</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/yellow.png"> 45</td>
+        <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/lightgreen.png"> 64</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/green.png"> 84</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/grey.png"> -</td>
         <td><img src="https://raw.githubusercontent.com/pemistahl/lingua-rs/main/images/grey.png"> -</td>

@@ -691,8 +691,8 @@ impl LanguageDetectorBuilder {
     /// This method disables the high accuracy mode so that only a small
     /// subset of language models is loaded into memory. The downside of
     /// this approach is that detection accuracy for short texts consisting
-    /// of less than 120 characters will drop significantly. However,
-    /// detection accuracy for texts which are longer than 120 characters
+    /// of less than 300 characters will drop significantly. However,
+    /// detection accuracy for texts which are longer than 300 characters
     /// will remain mostly unaffected.
     #[pyo3(name = "with_low_accuracy_mode")]
     fn py_with_low_accuracy_mode(mut self_: PyRefMut<Self>) -> PyRefMut<Self> {

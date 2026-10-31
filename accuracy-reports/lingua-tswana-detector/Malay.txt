@@ -1,16 +1,16 @@
 ##### Malay #####
 
->>> Accuracy on average: 58.17%
+>>> Accuracy on average: 57.50%
 
 >> Detection of 1000 single words (average length: 7 chars)
-Accuracy: 82.50%
-Erroneously classified as Tswana: 17.50%
+Accuracy: 87.90%
+Erroneously classified as Tswana: 12.10%
 
 >> Detection of 1000 word pairs (average length: 15 chars)
-Accuracy: 71.30%
-Erroneously classified as Tswana: 28.70%
+Accuracy: 70.60%
+Erroneously classified as Tswana: 29.40%
 
 >> Detection of 1000 sentences (average length: 116 chars)
-Accuracy: 20.70%
-Erroneously classified as Tswana: 79.30%
+Accuracy: 14.00%
+Erroneously classified as Tswana: 86.00%
 

@@ -1,14 +1,14 @@
 ##### Slovak #####
 
->>> Accuracy on average: 75.07%
+>>> Accuracy on average: 75.03%
 
 >> Detection of 1000 single words (average length: 8 chars)
 Accuracy: 51.10%
 Erroneously classified as Unknown: 48.90%
 
 >> Detection of 1000 word pairs (average length: 16 chars)
-Accuracy: 76.40%
-Erroneously classified as Unknown: 23.60%
+Accuracy: 76.30%
+Erroneously classified as Unknown: 23.70%
 
 >> Detection of 1000 sentences (average length: 101 chars)
 Accuracy: 97.70%
