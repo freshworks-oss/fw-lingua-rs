@@ -1,0 +1,16 @@
+##### Nepali #####
+
+>>> Accuracy on average: 98.17%
+
+>> Detection of 1000 single words (average length: 7 chars)
+Accuracy: 95.70%
+Erroneously classified as Marathi: 2.50%, Hindi: 1.80%
+
+>> Detection of 1000 word pairs (average length: 15 chars)
+Accuracy: 98.80%
+Erroneously classified as Marathi: 0.80%, Hindi: 0.40%
+
+>> Detection of 1000 sentences (average length: 139 chars)
+Accuracy: 100.00%
+Erroneously classified as 
+
