@@ -845,11 +845,14 @@ impl LanguageDetector {
                         && language == &Language::from_str("Hindi").unwrap();
                     let is_marathi = cfg!(feature = "marathi")
                         && language == &Language::from_str("Marathi").unwrap();
+                    let is_nepali = cfg!(feature = "nepali")
+                        && language == &Language::from_str("Nepali").unwrap();
                     let is_japanese = cfg!(feature = "japanese")
                         && language == &Language::from_str("Japanese").unwrap();
 
                     if is_hindi
                         || is_marathi
+                        || is_nepali
                         || (is_japanese && self.is_built_from_one_language)
                         || LANGUAGES_WITH_SINGLE_UNIQUE_SCRIPT.contains(language)
                     {

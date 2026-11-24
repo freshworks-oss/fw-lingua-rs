@@ -186,6 +186,9 @@ pub(crate) enum DetectorOption {
     #[strum(to_string = "lingua-mongolian-detector")]
     LinguaMongolianDetector,
 
+    #[strum(to_string = "lingua-nepali-detector")]
+    LinguaNepaliDetector,
+
     #[strum(to_string = "lingua-nynorsk-detector")]
     LinguaNynorskDetector,
 

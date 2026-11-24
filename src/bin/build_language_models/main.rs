@@ -9,13 +9,17 @@ use lingua::{
 fn lang_meta(code: &str) -> (Language, &'static str, &'static str) {
     match code {
         "as" => (Language::Assamese, "as", "\\p{Bengali}"),
+        // Hindi and Marathi: Devanagari only (used to augment them with CC-100 text).
+        "hi" => (Language::Hindi, "hi", "\\p{Devanagari}"),
         "id" => (Language::Indonesian, "id", "\\p{Latin}"),
         "kn" => (Language::Kannada, "kn", "\\p{Kannada}"),
         // Kurdish: Latin (Kurmanji) + Arabic (Sorani / Southern Kurdish)
         "ku" => (Language::Kurdish, "ku", "\\p{L}"),
         "lo" => (Language::Lao, "lo", "\\p{Lao}"),
         "ml" => (Language::Malayalam, "ml", "\\p{Malayalam}"),
+        "mr" => (Language::Marathi, "mr", "\\p{Devanagari}"),
         "ms" => (Language::Malay, "ms", "\\p{Latin}"),
+        "ne" => (Language::Nepali, "ne", "\\p{Devanagari}"),
         "uz" => (Language::Uzbek, "uz", "\\p{L}"),
         other => panic!("unknown code: {other}"),
     }

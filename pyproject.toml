@@ -73,6 +73,7 @@ classifiers = [
     "Natural Language :: Malay",
     "Natural Language :: Malayalam",
     "Natural Language :: Marathi",
+    "Natural Language :: Nepali",
     "Natural Language :: Norwegian",
     "Natural Language :: Panjabi",
     "Natural Language :: Persian",

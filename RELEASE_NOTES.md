@@ -1,3 +1,32 @@
+## Lingua 1.10.3 (not yet released)
+
+### Languages
+
+- Nepali (`ne`, `nep`, Devanagari script) is supported. The model is trained
+  on 50,000 lines of Nepali from the CC-100 corpus. Before, Nepali text was
+  always detected as Hindi or Marathi.
+
+### Improvements
+
+- The Hindi and Marathi models are augmented with 400,000 lines each of
+  Devanagari text from CC-100, so the three Devanagari models are trained on
+  text of a similar size. Without this, the larger Nepali model wins on much
+  Hindi and Marathi text, because the detector scores n-grams that a model
+  does not know as zero. The existing probabilities and the Hinglish (Latin)
+  n-grams of Hindi are unchanged.
+
+  Accuracy in high accuracy mode (sentences / word pairs / single words):
+
+  | Language | Before | After |
+  |---|---|---|
+  | Hindi | 93.0 / 65.8 / 63.9% | 94.3 / 63.8 / 49.0% |
+  | Marathi | 95.1 / 82.6 / 69.6% | 98.9 / 91.5 / 79.7% |
+  | Nepali | 0 / 0 / 0% | 100 / 98.8 / 95.7% |
+
+  The drop for Hindi single words comes from vocabulary that Hindi and Nepali
+  share: 39% of the Hindi test words are also frequent Nepali words (for
+  example ज्ञान, स्थापना, कार्य), so `ne` is also a valid answer for them.
+
 ## Lingua 1.10.2 (not yet released)
 
 ### Improvements

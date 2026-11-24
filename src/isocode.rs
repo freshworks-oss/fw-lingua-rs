@@ -247,6 +247,10 @@ pub enum IsoCode639_1 {
     /// The ISO 639-1 code for [`Norwegian Bokmal`](crate::language::Language::Bokmal)
     NB,
 
+    #[cfg(feature = "nepali")]
+    /// The ISO 639-1 code for [`Nepali`](crate::language::Language::Nepali)
+    NE,
+
     #[cfg(feature = "dutch")]
     /// The ISO 639-1 code for [`Dutch`](crate::language::Language::Dutch)
     NL,
@@ -598,6 +602,10 @@ pub enum IsoCode639_3 {
     #[cfg(feature = "malay")]
     /// The ISO 639-3 code for [`Malay`](crate::language::Language::Malay)
     MSA,
+
+    #[cfg(feature = "nepali")]
+    /// The ISO 639-3 code for [`Nepali`](crate::language::Language::Nepali)
+    NEP,
 
     #[cfg(feature = "dutch")]
     /// The ISO 639-3 code for [`Dutch`](crate::language::Language::Dutch)
