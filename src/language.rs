@@ -196,9 +196,6 @@ pub enum Language {
     #[cfg(feature = "mongolian")]
     Mongolian,
 
-    #[cfg(feature = "nepali")]
-    Nepali,
-
     #[cfg(feature = "nynorsk")]
     Nynorsk,
 
@@ -300,6 +297,11 @@ pub enum Language {
     #[strum(disabled)]
     #[cfg_attr(feature = "accuracy-reports", value(skip))]
     Ambiguous,
+
+    // Added after `Ambiguous` so that the Python int values of the languages
+    // above do not change.
+    #[cfg(feature = "nepali")]
+    Nepali,
 }
 
 impl Display for Language {

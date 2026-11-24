@@ -159,6 +159,7 @@ class Language(Enum):
     Chinese characters that both Chinese and Japanese use, such as 報酬.
     It is never a candidate language and is not part of `Language.all()`.
     """
+    NEPALI = 84
 
     @property
     def iso_code_639_1(self) -> IsoCode639_1:
@@ -311,6 +312,7 @@ class IsoCode639_1(Enum):
     ZU = 82
     UND = 83
     """The code for an undetermined language, used for `Language.AMBIGUOUS`."""
+    NE = 84
 
     @classmethod
     def from_str(cls, string: str) -> "IsoCode639_1":
@@ -413,6 +415,7 @@ class IsoCode639_3(Enum):
     ZUL = 82
     UND = 83
     """The code for an undetermined language, used for `Language.AMBIGUOUS`."""
+    NEP = 84
 
     @classmethod
     def from_str(cls, string: str) -> "IsoCode639_3":
