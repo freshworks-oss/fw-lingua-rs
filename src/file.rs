@@ -129,6 +129,8 @@ use lingua_maori_language_model::{MAORI_MODELS_DIRECTORY, MAORI_TESTDATA_DIRECTO
 use lingua_marathi_language_model::{MARATHI_MODELS_DIRECTORY, MARATHI_TESTDATA_DIRECTORY};
 #[cfg(feature = "mongolian")]
 use lingua_mongolian_language_model::{MONGOLIAN_MODELS_DIRECTORY, MONGOLIAN_TESTDATA_DIRECTORY};
+#[cfg(feature = "nepali")]
+use lingua_nepali_language_model::{NEPALI_MODELS_DIRECTORY, NEPALI_TESTDATA_DIRECTORY};
 #[cfg(feature = "nynorsk")]
 use lingua_nynorsk_language_model::{NYNORSK_MODELS_DIRECTORY, NYNORSK_TESTDATA_DIRECTORY};
 #[cfg(feature = "persian")]
@@ -383,6 +385,9 @@ fn get_language_models_directory(language: Language) -> Dir<'static> {
         #[cfg(feature = "mongolian")]
         Language::Mongolian => MONGOLIAN_MODELS_DIRECTORY,
 
+        #[cfg(feature = "nepali")]
+        Language::Nepali => NEPALI_MODELS_DIRECTORY,
+
         #[cfg(feature = "nynorsk")]
         Language::Nynorsk => NYNORSK_MODELS_DIRECTORY,
 
@@ -636,6 +641,9 @@ fn get_test_data_directory(language: Language) -> Dir<'static> {
 
         #[cfg(feature = "mongolian")]
         Language::Mongolian => MONGOLIAN_TESTDATA_DIRECTORY,
+
+        #[cfg(feature = "nepali")]
+        Language::Nepali => NEPALI_TESTDATA_DIRECTORY,
 
         #[cfg(feature = "nynorsk")]
         Language::Nynorsk => NYNORSK_TESTDATA_DIRECTORY,

@@ -118,6 +118,7 @@ Currently, the following 82 languages are supported:
   - Maori
   - Marathi
   - Mongolian
+  - Nepali
 - N
   - Norwegian Nynorsk
 - P

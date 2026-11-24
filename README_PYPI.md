@@ -142,6 +142,7 @@ are supported:
     - Maori
     - Marathi
     - Mongolian
+  - Nepali
 - N
     - Norwegian Nynorsk
 - P

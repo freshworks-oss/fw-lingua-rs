@@ -297,6 +297,11 @@ pub enum Language {
     #[strum(disabled)]
     #[cfg_attr(feature = "accuracy-reports", value(skip))]
     Ambiguous,
+
+    // Added after `Ambiguous` so that the Python int values of the languages
+    // above do not change.
+    #[cfg(feature = "nepali")]
+    Nepali,
 }
 
 impl Display for Language {
@@ -579,6 +584,9 @@ impl Language {
             #[cfg(feature = "mongolian")]
             Language::Mongolian => IsoCode639_1::MN,
 
+            #[cfg(feature = "nepali")]
+            Language::Nepali => IsoCode639_1::NE,
+
             #[cfg(feature = "nynorsk")]
             Language::Nynorsk => IsoCode639_1::NN,
 
@@ -832,6 +840,9 @@ impl Language {
 
             #[cfg(feature = "mongolian")]
             Language::Mongolian => IsoCode639_3::MON,
+
+            #[cfg(feature = "nepali")]
+            Language::Nepali => IsoCode639_3::NEP,
 
             #[cfg(feature = "nynorsk")]
             Language::Nynorsk => IsoCode639_3::NNO,
@@ -1126,6 +1137,9 @@ impl Language {
             #[cfg(feature = "marathi")]
             Language::Marathi => hashset!(Alphabet::Devanagari),
 
+            #[cfg(feature = "nepali")]
+            Language::Nepali => hashset!(Alphabet::Devanagari),
+
             #[cfg(feature = "armenian")]
             Language::Armenian => hashset!(Alphabet::Armenian),
 
@@ -1345,6 +1359,7 @@ mod tests {
                 Maori,
                 Marathi,
                 Mongolian,
+                Nepali,
                 Nynorsk,
                 Persian,
                 Polish,
@@ -1435,6 +1450,7 @@ mod tests {
                 Maori,
                 Marathi,
                 Mongolian,
+                Nepali,
                 Nynorsk,
                 Persian,
                 Polish,
@@ -1492,7 +1508,7 @@ mod tests {
     fn assert_certain_languages_support_devanagari_script() {
         assert_eq!(
             Language::all_with_devanagari_script(),
-            hashset!(Hindi, Marathi)
+            hashset!(Hindi, Marathi, Nepali)
         );
     }
 

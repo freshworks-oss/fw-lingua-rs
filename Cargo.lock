@@ -1528,7 +1528,7 @@ checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
 
 [[package]]
 name = "lingua"
-version = "1.10.2"
+version = "1.10.3"
 dependencies = [
  "clap",
  "cld2",
@@ -1592,6 +1592,7 @@ dependencies = [
  "lingua-maori-language-model",
  "lingua-marathi-language-model",
  "lingua-mongolian-language-model",
+ "lingua-nepali-language-model",
  "lingua-nynorsk-language-model",
  "lingua-persian-language-model",
  "lingua-polish-language-model",
@@ -1994,6 +1995,13 @@ dependencies = [
 
 [[package]]
 name = "lingua-mongolian-language-model"
+version = "1.3.0"
+dependencies = [
+ "include_dir",
+]
+
+[[package]]
+name = "lingua-nepali-language-model"
 version = "1.3.0"
 dependencies = [
  "include_dir",

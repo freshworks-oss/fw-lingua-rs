@@ -67,6 +67,7 @@ use lingua_malayalam_language_model::MALAYALAM_TESTDATA_DIRECTORY;
 use lingua_maori_language_model::MAORI_TESTDATA_DIRECTORY;
 use lingua_marathi_language_model::MARATHI_TESTDATA_DIRECTORY;
 use lingua_mongolian_language_model::MONGOLIAN_TESTDATA_DIRECTORY;
+use lingua_nepali_language_model::NEPALI_TESTDATA_DIRECTORY;
 use lingua_nynorsk_language_model::NYNORSK_TESTDATA_DIRECTORY;
 use lingua_persian_language_model::PERSIAN_TESTDATA_DIRECTORY;
 use lingua_polish_language_model::POLISH_TESTDATA_DIRECTORY;
@@ -154,6 +155,7 @@ pub(crate) fn get_test_data_directory(language: &Language) -> Dir<'static> {
         Language::Maori => MAORI_TESTDATA_DIRECTORY,
         Language::Marathi => MARATHI_TESTDATA_DIRECTORY,
         Language::Mongolian => MONGOLIAN_TESTDATA_DIRECTORY,
+        Language::Nepali => NEPALI_TESTDATA_DIRECTORY,
         Language::Nynorsk => NYNORSK_TESTDATA_DIRECTORY,
         Language::Persian => PERSIAN_TESTDATA_DIRECTORY,
         Language::Polish => POLISH_TESTDATA_DIRECTORY,
