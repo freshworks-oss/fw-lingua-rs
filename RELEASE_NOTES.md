@@ -8,23 +8,23 @@
 
 ### Improvements
 
-- The Hindi and Marathi models are augmented with 400,000 lines each of
-  Devanagari text from CC-100, so the three Devanagari models are trained on
-  text of a similar size. Without this, the larger Nepali model wins on much
-  Hindi and Marathi text, because the detector scores n-grams that a model
-  does not know as zero. The existing probabilities and the Hinglish (Latin)
-  n-grams of Hindi are unchanged.
+- The Hindi and Marathi models are augmented with Devanagari text from CC-100
+  (Hindi 861,406 lines, Marathi 400,000 lines), so the three Devanagari models
+  are trained on text of a similar size. Without this, the Nepali model wins
+  on much Hindi and Marathi text, because the detector scores n-grams that a
+  model does not know as zero. The existing probabilities and the Hinglish
+  (Latin) n-grams of Hindi are unchanged.
 
   Accuracy in high accuracy mode (sentences / word pairs / single words):
 
   | Language | Before | After |
   |---|---|---|
-  | Hindi | 93.0 / 65.8 / 63.9% | 94.3 / 63.8 / 49.0% |
-  | Marathi | 95.1 / 82.6 / 69.6% | 98.9 / 91.5 / 79.7% |
-  | Nepali | 0 / 0 / 0% | 100 / 98.8 / 95.7% |
+  | Hindi | 93.0 / 65.8 / 63.9% | 97.3 / 72.1 / 57.5% |
+  | Marathi | 95.1 / 82.6 / 69.6% | 99.0 / 90.6 / 78.6% |
+  | Nepali | 0 / 0 / 0% | 100 / 98.4 / 95.1% |
 
-  The drop for Hindi single words comes from vocabulary that Hindi and Nepali
-  share: 39% of the Hindi test words are also frequent Nepali words (for
+  Hindi single words go down because many short words are shared by Hindi
+  and Nepali: 39% of the Hindi test words are also frequent Nepali words (for
   example ज्ञान, स्थापना, कार्य), so `ne` is also a valid answer for them.
 
 ## Lingua 1.10.2 (not yet released)
