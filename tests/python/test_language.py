@@ -109,6 +109,7 @@ def test_all_languages_are_available():
             Language.MAORI,
             Language.MARATHI,
             Language.MONGOLIAN,
+            Language.NEPALI,
             Language.NYNORSK,
             Language.PERSIAN,
             Language.POLISH,
@@ -197,6 +198,7 @@ def test_all_spoken_languages_are_available():
             Language.MAORI,
             Language.MARATHI,
             Language.MONGOLIAN,
+            Language.NEPALI,
             Language.NYNORSK,
             Language.PERSIAN,
             Language.POLISH,
@@ -255,7 +257,7 @@ def test_languages_support_cyrillic_alphabet():
 
 def test_languages_support_devanagari_script():
     assert Language.all_with_devanagari_script() == frozenset(
-        [Language.HINDI, Language.MARATHI]
+        [Language.HINDI, Language.MARATHI, Language.NEPALI]
     )
 
 
